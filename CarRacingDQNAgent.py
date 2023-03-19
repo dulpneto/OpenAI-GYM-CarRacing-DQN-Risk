@@ -4,6 +4,7 @@ from collections import deque
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.optimizers import Adam
+import math
 
 class CarRacingDQNAgent:
     def __init__(
@@ -20,7 +21,8 @@ class CarRacingDQNAgent:
         epsilon         = 1.0,   # exploration rate
         epsilon_min     = 0.1,
         epsilon_decay   = 0.9999,
-        learning_rate   = 0.001
+        learning_rate   = 0.001,
+        lamb            = 0.0
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
@@ -32,6 +34,7 @@ class CarRacingDQNAgent:
         self.learning_rate   = learning_rate
         self.model           = self.build_model()
         self.target_model    = self.build_model()
+        self.lamb            = lamb
         self.update_target_model()
 
     def build_model(self):
@@ -71,12 +74,20 @@ class CarRacingDQNAgent:
                 target[action_index] = reward
             else:
                 t = self.target_model.predict(np.expand_dims(next_state, axis=0))[0]
-                target[action_index] = reward + self.gamma * np.amax(t)
+                if self.lamb == 0:
+                    # print('NEUTRAL')
+                    target[action_index] = reward + self.gamma * np.amax(t)
+                else:
+                    # print('RISK', self.lamb)
+                    target[action_index] = self.utility(reward + self.gamma * np.amax(t))
             train_state.append(state)
             train_target.append(target)
         self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
+
+    def utility(self, x):
+        return np.sign(self.lamb) * math.exp(self.lamb * x)
 
     def load(self, name):
         self.model.load_weights(name)

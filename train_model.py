@@ -5,12 +5,12 @@ from CarRacingDQNAgent import CarRacingDQNAgent
 from common_functions import process_state_image
 from common_functions import generate_state_frame_stack_from_queue
 
-RENDER                        = True
+RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 1000
 SKIP_FRAMES                   = 2
 TRAINING_BATCH_SIZE           = 64
-SAVE_TRAINING_FREQUENCY       = 25
+SAVE_TRAINING_FREQUENCY       = 10
 UPDATE_TARGET_MODEL_FREQUENCY = 5
 
 if __name__ == '__main__':
@@ -19,10 +19,13 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--start', type=int, help='The starting episode, default to 1.')
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=1.0, help='The starting epsilon of the agent, default to 1.0.')
+    parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
     args = parser.parse_args()
 
+    print('Training with risk factor', args.lamb)
+
     env = gym.make('CarRacing-v0')
-    agent = CarRacingDQNAgent(epsilon=args.epsilon)
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
         agent.load(args.model)
     if args.start:
@@ -80,6 +83,6 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save/trial_{}.h5'.format(e))
+            agent.save('./save/trial_{}_{}.h5'.format(args.lamb,e))
 
     env.close()
