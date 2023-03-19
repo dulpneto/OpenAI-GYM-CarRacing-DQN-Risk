@@ -1,3 +1,6 @@
+import logging
+logging.getLogger("tensorflow").setLevel(logging.WARNING)
+
 import argparse
 import gymnasium as gym
 from collections import deque
@@ -24,7 +27,7 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
-    env = gym.make('CarRacing-v2')
+    env = gym.make('CarRacing-v2', render_mode="human")
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
         agent.load(args.model)
@@ -77,7 +80,7 @@ if __name__ == '__main__':
                 print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards(adjusted): {:.2}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, float(total_reward), float(agent.epsilon)))
                 break
             if len(agent.memory) > TRAINING_BATCH_SIZE:
-                agent.replay(TRAINING_BATCH_SIZE)
+                agent.replay_batch(TRAINING_BATCH_SIZE)
             time_frame_counter += 1
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:

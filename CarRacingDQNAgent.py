@@ -47,7 +47,7 @@ class CarRacingDQNAgent:
         model.add(Flatten())
         model.add(Dense(216, activation='relu'))
         model.add(Dense(len(self.action_space), activation=None))
-        model.compile(loss='mean_squared_error', optimizer=Adam(lr=self.learning_rate, epsilon=1e-7))
+        model.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=self.learning_rate, epsilon=1e-7))
         return model
 
     def update_target_model(self):
@@ -83,6 +83,39 @@ class CarRacingDQNAgent:
                     target[action_index] = self.utility(reward + self.gamma * q_rev)
             train_state.append(state)
             train_target.append(target)
+        self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
+    def replay_batch(self, batch_size):
+        minibatch = random.sample(self.memory, batch_size)
+
+        current_states = np.array([transition[0] for transition in minibatch])
+        current_qs_list = self.model.predict(current_states)
+        new_current_states = np.array([transition[3] for transition in minibatch])
+        future_qs_list = self.target_model.predict(new_current_states)
+
+        train_state = []
+        train_target = []
+        for index, (current_state, action, reward, next_state, done) in enumerate(minibatch):
+            future_qs = future_qs_list[index]
+            current_qs = current_qs_list[index]
+
+            if done:
+                current_qs[action] = reward
+            else:
+                t = future_qs
+                if self.lamb == 0:
+                    # print('NEUTRAL')
+                    current_qs[action] = reward + self.gamma * np.amax(t)
+                else:
+                    # print('RISK', self.lamb)
+                    q_rev = self.reverse_utility(np.amax(t))
+                    current_qs[action] = self.utility(reward + self.gamma * q_rev)
+
+            train_state.append(current_state)
+            train_target.append(current_qs)
+
         self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
