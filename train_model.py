@@ -34,7 +34,7 @@ if __name__ == '__main__':
         ENDING_EPISODE = args.end
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
-        init_state = env.reset()
+        init_state, info = env.reset()
         init_state = process_state_image(init_state)
 
         total_reward = 0
@@ -52,7 +52,8 @@ if __name__ == '__main__':
 
             reward = 0
             for _ in range(SKIP_FRAMES+1):
-                next_state, r, done, info = env.step(action)
+                next_state, r, terminated, truncated, info = env.step(action)
+                done = (terminated or truncated)
                 reward += r
                 if done:
                     break
