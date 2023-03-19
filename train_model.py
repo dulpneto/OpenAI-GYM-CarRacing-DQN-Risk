@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
-    env = gym.make('CarRacing-v0')
+    env = gym.make('CarRacing-v2')
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
         agent.load(args.model)
