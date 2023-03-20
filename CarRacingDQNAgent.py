@@ -110,8 +110,13 @@ class CarRacingDQNAgent:
                     current_qs[action] = reward + self.gamma * np.amax(t)
                 else:
                     # print('RISK', self.lamb)
-                    q_rev = self.reverse_utility(np.amax(t))
-                    current_qs[action] = self.utility(reward + self.gamma * q_rev)
+                    # q_rev = self.reverse_utility(np.amax(t))
+                    # current_qs[action] = self.utility(reward + self.gamma * q_rev)
+                    alpha = 0.3
+                    target = reward + self.gamma * np.amax(t)
+                    u = self.utility(target)
+                    u_q = self.utility(current_qs[action])
+                    current_qs[action] = self.reverse_utility(u_q + (alpha * (u - u_q)))
 
             train_state.append(current_state)
             train_target.append(current_qs)
@@ -125,8 +130,8 @@ class CarRacingDQNAgent:
 
     def reverse_utility(self, x):
         value = np.sign(self.lamb) * x
-        if value <= 0:
-            return math.log(1e-323) / self.lamb  # returning lowest value to avoid errors with network initialization
+        # if value <= 0:
+        #    return math.log(1e-323) / self.lamb  # returning lowest value to avoid errors with network initialization
         return math.log(np.sign(self.lamb) * x) / self.lamb
 
     def load(self, name):
