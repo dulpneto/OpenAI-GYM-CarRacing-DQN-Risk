@@ -10,7 +10,7 @@ from common_functions import generate_state_frame_stack_from_queue
 
 RENDER                        = False
 STARTING_EPISODE              = 1
-ENDING_EPISODE                = 1000
+ENDING_EPISODE                = 10000
 SKIP_FRAMES                   = 2
 TRAINING_BATCH_SIZE           = 64
 SAVE_TRAINING_FREQUENCY       = 10
@@ -88,6 +88,12 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save/trial_{}_{}.h5'.format(args.lamb,e))
+            agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
+            with open('./CURRENT_MODEL.txt', 'w') as f:
+                f.write('./save/trial_{}_{}.h5'.format(args.lamb, e))
+            with open('./NEXT_EPISODE.txt', 'w') as f:
+                f.write('{}'.format(e+1))
+            with open('./CURRENT_EPSILON.txt', 'w') as f:
+                f.write('{}'.format(float(agent.epsilon)))
 
     env.close()
