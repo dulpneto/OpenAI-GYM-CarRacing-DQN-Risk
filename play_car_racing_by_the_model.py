@@ -9,16 +9,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play CarRacing by the trained model.')
     parser.add_argument('-m', '--model', required=True, help='The `.h5` file of the trained model.')
     parser.add_argument('-e', '--episodes', type=int, default=1, help='The number of episodes should the model plays.')
+    parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
     args = parser.parse_args()
     train_model = args.model
     play_episodes = args.episodes
 
-    env = gym.make('CarRacing-v0')
-    agent = CarRacingDQNAgent(epsilon=0) # Set epsilon to 0 to ensure all actions are instructed by the agent
+    env = gym.make('CarRacing-v2', render_mode="human")
+    # Set epsilon to 0 to ensure all actions are instructed by the agent
+    agent = CarRacingDQNAgent(epsilon=0, lamb=args.lamb)
     agent.load(train_model)
 
     for e in range(play_episodes):
-        init_state = env.reset()
+        init_state, info = env.reset()
         init_state = process_state_image(init_state)
 
         total_reward = 0
@@ -31,7 +33,9 @@ if __name__ == '__main__':
 
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
-            next_state, reward, done, info = env.step(action)
+            next_state, reward, terminated, truncated, info = env.step(action)
+
+            done = (terminated or truncated)
 
             total_reward += reward
 
