@@ -1,6 +1,12 @@
 #!/bin/bash
 
-LAMB=1.0
+if [ "$LAMB" == "" ]; then
+    msg "You must define LAMB"
+    rm $PID_FILE
+    exit 1
+fi
+
+python3 train_model.py -l $LAMB > ../out_0.log
 
 for i in {1..1000}
 do
