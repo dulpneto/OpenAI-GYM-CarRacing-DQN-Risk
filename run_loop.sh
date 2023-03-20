@@ -1,8 +1,7 @@
 #!/bin/bash
 
 if [ "$LAMB" == "" ]; then
-    msg "You must define LAMB"
-    rm $PID_FILE
+    echo "You must define LAMB"
     exit 1
 fi
 
