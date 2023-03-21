@@ -12,7 +12,8 @@ RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 10000
 SKIP_FRAMES                   = 2
-TRAINING_BATCH_SIZE           = 64
+TRAINING_BATCH_SIZE           = 250
+TRAINING_MODEL_FREQUENCY      = 5
 SAVE_TRAINING_FREQUENCY       = 10
 UPDATE_TARGET_MODEL_FREQUENCY = 5
 
@@ -80,9 +81,12 @@ if __name__ == '__main__':
             if done or negative_reward_counter >= 25 or total_reward < 0:
                 print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards(adjusted): {:.2}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, float(total_reward), float(agent.epsilon)))
                 break
-            if len(agent.memory) > TRAINING_BATCH_SIZE:
-                agent.replay_batch(TRAINING_BATCH_SIZE)
+
             time_frame_counter += 1
+
+            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
+                agent.replay_batch(TRAINING_BATCH_SIZE)
+
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()

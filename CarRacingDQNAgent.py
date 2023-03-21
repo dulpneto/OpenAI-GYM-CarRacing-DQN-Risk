@@ -22,7 +22,8 @@ class CarRacingDQNAgent:
         epsilon_min     = 0.1,
         epsilon_decay   = 0.9999,
         learning_rate   = 0.001,
-        lamb            = 0.0
+        lamb            = 0.0,
+        q_learning_alpha= 0.3
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
@@ -35,6 +36,7 @@ class CarRacingDQNAgent:
         self.model           = self.build_model()
         self.target_model    = self.build_model()
         self.lamb            = lamb
+        self.q_learning_alpha= q_learning_alpha
         self.update_target_model()
 
     def build_model(self):
@@ -107,16 +109,18 @@ class CarRacingDQNAgent:
                 t = future_qs
                 if self.lamb == 0:
                     # print('NEUTRAL')
-                    current_qs[action] = reward + self.gamma * np.amax(t)
+                    # current_qs[action] = reward + self.gamma * np.amax(t)
+                    target = reward + self.gamma * np.amax(t)
+                    td = target - current_qs[action]
+                    current_qs[action] + (self.q_learning_alpha * td)
                 else:
                     # print('RISK', self.lamb)
                     # q_rev = self.reverse_utility(np.amax(t))
                     # current_qs[action] = self.utility(reward + self.gamma * q_rev)
-                    alpha = 0.3
                     target = reward + self.gamma * np.amax(t)
                     u = self.utility(target)
                     u_q = self.utility(current_qs[action])
-                    current_qs[action] = self.reverse_utility(u_q + (alpha * (u - u_q)))
+                    current_qs[action] = self.reverse_utility(u_q + (self.q_learning_alpha * (u - u_q)))
 
             train_state.append(current_state)
             train_target.append(current_qs)
