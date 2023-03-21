@@ -11,9 +11,9 @@ from common_functions import generate_state_frame_stack_from_queue
 RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 10000
-SKIP_FRAMES                   = 2
-TRAINING_BATCH_SIZE           = 250
-TRAINING_MODEL_FREQUENCY      = 5
+SKIP_FRAMES                   = 3
+TRAINING_BATCH_SIZE           = 64
+TRAINING_MODEL_FREQUENCY      = 1
 SAVE_TRAINING_FREQUENCY       = 10
 UPDATE_TARGET_MODEL_FREQUENCY = 5
 
@@ -24,12 +24,16 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=1.0, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
+    parser.add_argument('-f', '--progress_file', type=bool, default=False, help='save progress files, default to False.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
 
-    # env = gym.make('CarRacing-v2', render_mode="human")
-    env = gym.make('CarRacing-v2')
+    if RENDER:
+        env = gym.make('CarRacing-v2', render_mode="human")
+    else:
+        env = gym.make('CarRacing-v2')
+
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
         agent.load(args.model)
@@ -79,7 +83,7 @@ if __name__ == '__main__':
             agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
 
             if done or negative_reward_counter >= 25 or total_reward < 0:
-                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards(adjusted): {:.2}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, float(total_reward), float(agent.epsilon)))
+                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards(adjusted): {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, total_reward, float(agent.epsilon)))
                 break
 
             time_frame_counter += 1
@@ -87,17 +91,18 @@ if __name__ == '__main__':
             if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
                 agent.replay_batch(TRAINING_BATCH_SIZE)
 
-
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
             agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
-            with open('./CURRENT_MODEL.txt', 'w') as f:
-                f.write('./save/trial_{}_{}.h5'.format(args.lamb, e))
-            with open('./NEXT_EPISODE.txt', 'w') as f:
-                f.write('{}'.format(e+1))
-            with open('./CURRENT_EPSILON.txt', 'w') as f:
-                f.write('{}'.format(float(agent.epsilon)))
+
+            if args.progress_file:
+                with open('./CURRENT_MODEL.txt', 'w') as f:
+                    f.write('./save/trial_{}_{}.h5'.format(args.lamb, e))
+                with open('./NEXT_EPISODE.txt', 'w') as f:
+                    f.write('{}'.format(e+1))
+                with open('./CURRENT_EPSILON.txt', 'w') as f:
+                    f.write('{}'.format(float(agent.epsilon)))
 
     env.close()

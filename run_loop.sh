@@ -5,7 +5,7 @@ if [ "$LAMB" == "" ]; then
     exit 1
 fi
 
-python3 train_model.py -l $LAMB > ../out_0.log
+python3 train_model.py -l $LAMB -f True > ../out_0.log
 
 for i in {1..1000}
 do
@@ -13,5 +13,5 @@ do
  CURRENT_MODEL=$(cat 'CURRENT_MODEL.txt'); 
  NEXT_EPISODE=$(cat 'NEXT_EPISODE.txt');
 
- python3 train_model.py -l $LAMB -s $NEXT_EPISODE -p $CURRENT_EPSILON -m $CURRENT_MODEL > ../out_$i.log
+ python3 train_model.py -l $LAMB -f True -s $NEXT_EPISODE -p $CURRENT_EPSILON -m $CURRENT_MODEL > ../out_$i.log
 done

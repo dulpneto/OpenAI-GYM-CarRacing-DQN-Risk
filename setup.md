@@ -32,7 +32,7 @@ sudo apt-get install swig
 #deps
 pip3 install gymnasium
 pip3 install gymnasium[box2d]
-pip3 install tensorflow
+pip3 install tensorflow==2.9.2
 pip3 install opencv-contrib-python
 
 

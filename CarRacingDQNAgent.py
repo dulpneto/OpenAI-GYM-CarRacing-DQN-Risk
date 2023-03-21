@@ -60,42 +60,19 @@ class CarRacingDQNAgent:
 
     def act(self, state):
         if np.random.rand() > self.epsilon:
-            act_values = self.model.predict(np.expand_dims(state, axis=0))
+            act_values = self.model.predict(np.expand_dims(state, axis=0), verbose=0)
             action_index = np.argmax(act_values[0])
         else:
             action_index = random.randrange(len(self.action_space))
         return self.action_space[action_index]
 
-    def replay(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
-        train_state = []
-        train_target = []
-        for state, action_index, reward, next_state, done in minibatch:
-            target = self.model.predict(np.expand_dims(state, axis=0))[0]
-            if done:
-                target[action_index] = reward
-            else:
-                t = self.target_model.predict(np.expand_dims(next_state, axis=0))[0]
-                if self.lamb == 0:
-                    # print('NEUTRAL')
-                    target[action_index] = reward + self.gamma * np.amax(t)
-                else:
-                    # print('RISK', self.lamb)
-                    q_rev = self.reverse_utility(np.amax(t))
-                    target[action_index] = self.utility(reward + self.gamma * q_rev)
-            train_state.append(state)
-            train_target.append(target)
-        self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-
     def replay_batch(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
 
         current_states = np.array([transition[0] for transition in minibatch])
-        current_qs_list = self.model.predict(current_states)
+        current_qs_list = self.model.predict(current_states, verbose=0)
         new_current_states = np.array([transition[3] for transition in minibatch])
-        future_qs_list = self.target_model.predict(new_current_states)
+        future_qs_list = self.target_model.predict(new_current_states, verbose=0)
 
         train_state = []
         train_target = []

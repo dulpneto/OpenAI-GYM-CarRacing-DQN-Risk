@@ -1,5 +1,5 @@
 import argparse
-import gym
+import gymnasium as gym
 from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
 from common_functions import process_state_image
@@ -37,12 +37,14 @@ if __name__ == '__main__':
 
             done = (terminated or truncated)
 
+            print('REWARD', reward, "TOTAL", total_reward)
+
             total_reward += reward
 
             next_state = process_state_image(next_state)
             state_frame_stack_queue.append(next_state)
 
             if done:
-                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards: {:.2}'.format(e+1, play_episodes, time_frame_counter, float(total_reward)))
+                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards: {}'.format(e+1, play_episodes, time_frame_counter, total_reward))
                 break
             time_frame_counter += 1
