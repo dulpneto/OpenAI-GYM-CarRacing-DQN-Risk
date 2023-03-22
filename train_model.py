@@ -70,9 +70,14 @@ if __name__ == '__main__':
             # If continually getting negative reward 10 times after the tolerance steps, terminate this episode
             negative_reward_counter = negative_reward_counter + 1 if time_frame_counter > 100 and reward < 0 else 0
 
+            # Set die mode when it keeps getting negative
+            if negative_reward_counter >= 25 or total_reward < 0:
+                done = True
+                reward += (-10)
+
             # Extra bonus for the model if it uses full gas
-            if action[1] == 1 and action[2] == 0:
-                reward *= 1.5
+            # if action[1] == 1 and action[2] == 0:
+            #    reward *= 1.5
 
             total_reward += reward
 
@@ -82,8 +87,8 @@ if __name__ == '__main__':
 
             agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
 
-            if done or negative_reward_counter >= 25 or total_reward < 0:
-                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards(adjusted): {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, total_reward, float(agent.epsilon)))
+            if done:
+                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards: {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, total_reward, float(agent.epsilon)))
                 break
 
             time_frame_counter += 1
