@@ -20,10 +20,10 @@ class CarRacingDQNAgent:
         gamma           = 0.95,  # discount rate
         epsilon         = 1.0,   # exploration rate
         epsilon_min     = 0.1,
-        epsilon_decay   = 0.9999,
+        epsilon_decay   = 0.99999,
         learning_rate   = 0.001,
         lamb            = 0.0,
-        q_learning_alpha= 0.1
+        q_learning_alpha= 0.3
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
