@@ -72,7 +72,11 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
+
+            if agent.log_sum_exp:
+                agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
+            else:
+                agent.save('./save/trial_log_{}_{}.h5'.format(args.lamb, e))
 
             if args.progress_file:
                 with open('./CURRENT_MODEL.txt', 'w') as f:

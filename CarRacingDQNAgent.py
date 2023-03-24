@@ -32,7 +32,7 @@ class CarRacingDQNAgent:
         self.target_model    = self.build_model()
         self.lamb            = lamb
         self.q_learning_alpha= q_learning_alpha
-        self.log_sum_exp = False
+        self.log_sum_exp = True
         self.update_target_model()
 
     def build_model(self):
