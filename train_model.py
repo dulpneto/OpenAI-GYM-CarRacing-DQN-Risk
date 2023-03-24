@@ -8,7 +8,7 @@ from CarRacingEnv import CarRacingEnv
 
 from common_functions import generate_state_frame_stack_from_queue
 
-RENDER                        = True
+RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 1000
 TRAINING_BATCH_SIZE           = 256
