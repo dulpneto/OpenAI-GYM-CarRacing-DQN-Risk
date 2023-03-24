@@ -2,19 +2,18 @@ import logging
 logging.getLogger("tensorflow").setLevel(logging.WARNING)
 
 import argparse
-import gymnasium as gym
 from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
-from common_functions import process_state_image
+from CarRacingEnv import CarRacingEnv
+
 from common_functions import generate_state_frame_stack_from_queue
 
-RENDER                        = False
+RENDER                        = True
 STARTING_EPISODE              = 1
-ENDING_EPISODE                = 100000
-SKIP_FRAMES                   = 3
+ENDING_EPISODE                = 1000
 TRAINING_BATCH_SIZE           = 256
 TRAINING_MODEL_FREQUENCY      = 4
-SAVE_TRAINING_FREQUENCY       = 50
+SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 5
 
 if __name__ == '__main__':
@@ -29,10 +28,7 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
-    if RENDER:
-        env = gym.make('CarRacing-v2', render_mode="human")
-    else:
-        env = gym.make('CarRacing-v2')
+    env = CarRacingEnv(render=RENDER)
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
@@ -43,13 +39,9 @@ if __name__ == '__main__':
         ENDING_EPISODE = args.end
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
-        init_state, info = env.reset()
-        init_state = process_state_image(init_state)
-
-        total_reward = 0
+        current_state, info = env.reset()
+        state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
         negative_reward_counter = 0
-        state_frame_stack_queue = deque([init_state]*agent.frame_stack_num, maxlen=agent.frame_stack_num)
-        time_frame_counter = 1
         done = False
         
         while True:
@@ -59,41 +51,21 @@ if __name__ == '__main__':
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
 
-            reward = 0
-            for _ in range(SKIP_FRAMES+1):
-                next_state, r, terminated, truncated, info = env.step(action)
-                done = (terminated or truncated)
-                reward += r
-                if done:
-                    break
+            next_state, reward, terminated, truncated, info = env.step(action)
+            done = (terminated or truncated)
 
-            # If continually getting negative reward 10 times after the tolerance steps, terminate this episode
-            negative_reward_counter = negative_reward_counter + 1 if time_frame_counter > 100 and reward < 0 else 0
-
-            # Set die mode when it keeps getting negative
-            if negative_reward_counter >= 25 or total_reward < 0:
-                done = True
-                reward += (-10)
-
-            # Extra bonus for the model if it uses full gas
-            # if action[1] == 1 and action[2] == 0:
-            #    reward *= 1.5
-
-            total_reward += reward
-
-            next_state = process_state_image(next_state)
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
             agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
 
+            current_state = next_state
+
             if done:
-                print('Episode: {}/{}, Scores(Time Frames): {}, Total Rewards: {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, time_frame_counter, total_reward, float(agent.epsilon)))
+                print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, env.frames, env.tiles_visited, env.total_reward, float(agent.epsilon)))
                 break
 
-            time_frame_counter += 1
-
-            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
+            if len(agent.memory) > TRAINING_BATCH_SIZE and env.frames % TRAINING_MODEL_FREQUENCY == 0:
                 agent.replay_batch(TRAINING_BATCH_SIZE)
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:

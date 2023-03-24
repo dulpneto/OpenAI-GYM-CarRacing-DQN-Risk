@@ -9,18 +9,13 @@ import math
 class CarRacingDQNAgent:
     def __init__(
         self,
-        action_space    = [
-            (-1, 1, 0.2), (0, 1, 0.2), (1, 1, 0.2), #           Action Space Structure
-            (-1, 1,   0), (0, 1,   0), (1, 1,   0), #        (Steering Wheel, Gas, Break)
-            (-1, 0, 0.2), (0, 0, 0.2), (1, 0, 0.2), # Range        -1~1       0~1   0~1
-            (-1, 0,   0), (0, 0,   0), (1, 0,   0)
-        ],
+        action_space    = 5,
         frame_stack_num = 3,
         memory_size     = 5000,
         gamma           = 0.95,  # discount rate
         epsilon         = 1.0,   # exploration rate
         epsilon_min     = 0.1,
-        epsilon_decay   = 0.99999,
+        epsilon_decay   = 0.9999,
         learning_rate   = 0.001,
         lamb            = 0.0,
         q_learning_alpha= 0.3
@@ -43,13 +38,13 @@ class CarRacingDQNAgent:
     def build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Conv2D(filters=6, kernel_size=(7, 7), strides=3, activation='relu', input_shape=(96, 96, self.frame_stack_num)))
+        model.add(Conv2D(filters=6, kernel_size=(7, 7), strides=3, activation='relu', input_shape=(80, 80, self.frame_stack_num)))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Conv2D(filters=12, kernel_size=(4, 4), activation='relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Flatten())
         model.add(Dense(216, activation='relu'))
-        model.add(Dense(len(self.action_space), activation=None))
+        model.add(Dense(self.action_space, activation=None))
         model.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=self.learning_rate, epsilon=1e-7))
         return model
 
@@ -57,15 +52,15 @@ class CarRacingDQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
     def memorize(self, state, action, reward, next_state, done):
-        self.memory.append((state, self.action_space.index(action), reward, next_state, done))
+        self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
         if np.random.rand() > self.epsilon:
             act_values = self.model.predict(np.expand_dims(state, axis=0), verbose=0)
-            action_index = np.argmax(act_values[0])
+            action = np.argmax(act_values[0])
         else:
-            action_index = random.randrange(len(self.action_space))
-        return self.action_space[action_index]
+            action = random.randrange(self.action_space)
+        return action
 
     def replay_batch(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
