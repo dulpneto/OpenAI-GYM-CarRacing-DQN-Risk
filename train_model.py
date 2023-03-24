@@ -10,7 +10,7 @@ from common_functions import generate_state_frame_stack_from_queue
 
 RENDER                        = False
 STARTING_EPISODE              = 1
-ENDING_EPISODE                = 1000
+ENDING_EPISODE                = 10000
 TRAINING_BATCH_SIZE           = 256
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25

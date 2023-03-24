@@ -18,7 +18,7 @@ class CarRacingDQNAgent:
         epsilon_decay   = 0.9999,
         learning_rate   = 0.001,
         lamb            = 0.0,
-        q_learning_alpha= 0.3
+        q_learning_alpha= 0.1
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
@@ -32,7 +32,7 @@ class CarRacingDQNAgent:
         self.target_model    = self.build_model()
         self.lamb            = lamb
         self.q_learning_alpha= q_learning_alpha
-        self.log_sum_exp = True
+        self.log_sum_exp = False
         self.update_target_model()
 
     def build_model(self):
