@@ -1,7 +1,4 @@
 import argparse
-import cv2
-import numpy as np
-import gymnasium as gym
 from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
 from CarRacingEnv import CarRacingEnv
@@ -16,7 +13,7 @@ if __name__ == '__main__':
     train_model = args.model
     play_episodes = args.episodes
 
-    env = CarRacingEnv(render=True)
+    env = CarRacingEnv(render=True, frames_to_run=30)
     # Set epsilon to 0 to ensure all actions are instructed by the agent
     agent = CarRacingDQNAgent(epsilon=0, lamb=args.lamb)
     agent.load(train_model)
@@ -34,7 +31,7 @@ if __name__ == '__main__':
 
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
-            next_state, reward, terminated, truncated, info = env.step(action)
+            next_state, reward, terminated, truncated, info = env.step(3)
 
             done = (terminated or truncated)
 
@@ -43,6 +40,8 @@ if __name__ == '__main__':
             total_reward += reward
 
             state_frame_stack_queue.append(next_state)
+
+            # print('{} REWARD {} TILES {}'.format(env.frames, reward, env.tiles_visited))
 
             if done:
                 print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}'.format(e+1, play_episodes,

@@ -38,7 +38,7 @@ class CarRacingEnv:
         self.tiles_visited = 0
         self.negative_rewards = 0
         self.total_reward = 0
-        self.init_env()
+        # self.init_env()
 
     def init_env(self):
         init_state, info = self.env.reset()
@@ -57,24 +57,25 @@ class CarRacingEnv:
         reward = 0
         for _ in range(self.skip_frames + 1):
             next_state_img, r, terminated, truncated, info = self.env.step(action)
+            if r > 0:
+                self.tiles_visited += 1
             done = (terminated or truncated)
             reward += r
             if done:
                 break
 
         if reward > 0:
-            self.tiles_visited += int(reward / 3)  # we get a reward a little greater than 3 whe we visit a new tile
             self.negative_rewards = 0
         else:
             self.negative_rewards += 1
 
         if self.frames >= self.frames_to_run:
             terminated = True
-            if self.tiles_visited > self.frames_to_run * 0.8:
+            if self.tiles_visited >= self.frames_to_run * 0.6:
                 reward += 10
         elif self.negative_rewards >= self.frames_to_die:
             truncated = True
-            reward -= 1
+            reward -= 10
 
         self.total_reward += reward
         return convert_image_to_state(next_state_img), reward, terminated, truncated, info
