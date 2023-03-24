@@ -18,7 +18,7 @@ class CarRacingDQNAgent:
         epsilon_decay   = 0.9999,
         learning_rate   = 0.001,
         lamb            = 0.0,
-        q_learning_alpha= 1.0
+        q_learning_alpha= 0.1
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
