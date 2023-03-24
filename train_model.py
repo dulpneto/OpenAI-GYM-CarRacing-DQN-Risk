@@ -11,10 +11,10 @@ from common_functions import generate_state_frame_stack_from_queue
 RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 10000
-TRAINING_BATCH_SIZE           = 256
+TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
-UPDATE_TARGET_MODEL_FREQUENCY = 5
+UPDATE_TARGET_MODEL_FREQUENCY = 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a DQN agent to play CarRacing.')

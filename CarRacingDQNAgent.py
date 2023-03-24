@@ -82,10 +82,10 @@ class CarRacingDQNAgent:
                 t = future_qs
                 if self.lamb == 0:
                     # print('NEUTRAL')
-                    # current_qs[action] = reward + self.gamma * np.amax(t)
-                    target = reward + self.gamma * np.amax(t)
-                    td = target - current_qs[action]
-                    current_qs[action] + (self.q_learning_alpha * td)
+                    current_qs[action] = reward + self.gamma * np.amax(t)
+                    # target = reward + self.gamma * np.amax(t)
+                    # td = target - current_qs[action]
+                    # current_qs[action] + (self.q_learning_alpha * td)
                 elif not self.log_sum_exp:
                     # print('RISK', self.lamb)
                     # q_rev = self.reverse_utility(np.amax(t))
