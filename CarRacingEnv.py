@@ -1,6 +1,6 @@
 import gymnasium as gym
 import cv2
-
+import numpy as np
 
 def convert_image_to_state(state):
     # crop to remove low bar
@@ -21,13 +21,15 @@ class CarRacingEnv:
         frames_to_skip  = 50,  # number of frames environment will skip at the beginning
         frames_to_run   = 200,  # number of frames to reach the goal
         frames_to_die   = 50,  # number of frames it allows agent to get negative reward in a row
-        skip_frames     = 3,
+        skip_frames     = 2,
+        slippery_tax    = 0.2, # chances of the action not to be executed
     ):
         self.human_render   = render
         self.frames_to_skip = frames_to_skip
         self.frames_to_run  = frames_to_run
         self.frames_to_die  = frames_to_die
         self.skip_frames    = skip_frames
+        self.slippery_tax   = slippery_tax
         if self.human_render:
             # 5 actions: [do nothing, left, right, gas, brake]
             self.env = gym.make('CarRacing-v2', continuous=False, domain_randomize=False, render_mode="human")
@@ -53,6 +55,10 @@ class CarRacingEnv:
 
     def step(self, action):
         self.frames += 1
+
+        # if is slippery move car ignores all actions and accelerate
+        if np.random.rand() < self.slippery_tax:
+            action = 3
 
         reward = 0
         for _ in range(self.skip_frames + 1):
