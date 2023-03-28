@@ -7,6 +7,10 @@ import math
 from CarRacingDQNAgent import CarRacingDQNAgent
 from CarRacingEnv import CarRacingEnv
 from common_functions import generate_state_frame_stack_from_queue
+def log(txt):
+    with open('./result.log', 'a') as f:
+        f.write(txt + '\n')
+    print(txt)
 
 if __name__ == '__main__':
 
@@ -60,8 +64,8 @@ if __name__ == '__main__':
                 # print('{} REWARD {} TILES {}'.format(environment.frames, reward, environment.tiles_visited))
 
                 if done:
-                    print(
-                        'Risk: {}, Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}'.format(lamb,
+
+                    log('Risk: {}, Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}'.format(lamb,
                                                                                                                   e + 1,
                                                                                                                   play_episodes,
                                                                                                                   env.frames,
@@ -80,29 +84,29 @@ if __name__ == '__main__':
 
                             all_rewards_utility[lamb][lamb2].append(t)
                         except:
-                            print("EXP error for {} {}".format(lamb, lamb2))
+                            log("EXP error for {} {}".format(lamb, lamb2))
 
                     break
 
             all_rewards[lamb].append(total_reward)
 
-    print('\n\n*** FINAL ****\n')
-    print('RISK\tMEAN\tVAR')
+    log('\n\n*** FINAL ****\n')
+    log('RISK\tMEAN\tVAR')
     for l in range(-100, 101, 25):
         lamb = l/100
-        print('{}\t{}\t{}'.format(lamb, round(np.mean(all_rewards[lamb]), 2), round(np.var(all_rewards[lamb]), 2)))
+        log('{}\t{}\t{}'.format(lamb, round(np.mean(all_rewards[lamb]), 2), round(np.var(all_rewards[lamb]), 2)))
 
-    print('\n\n*** UTILITY ****\n')
+    log('\n\n*** UTILITY ****\n')
 
     v = 'XXXX'.format(lamb)
     for l in range(-100, 101, 25):
         lamb = l / 100
         v = v+'\t{}'.format(lamb)
-    print(v)
+    log(v)
     for l in range(-100, 101, 25):
         lamb = l / 100
         v = 'LAMB {}'.format(lamb)
         for l2 in range(-100, 101, 25):
             lamb2 = l2 / 100
             v = v + '\t{}'.format(round(np.mean(all_rewards_utility[lamb][lamb2]), 2))
-        print(v)
+        log(v)
