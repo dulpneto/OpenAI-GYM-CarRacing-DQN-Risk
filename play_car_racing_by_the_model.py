@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
             state_frame_stack_queue.append(next_state)
 
-            # print('{} REWARD {} TILES {}'.format(env.frames, reward, env.tiles_visited))
+            # print('{} REWARD {} TILES {}'.format(environment.frames, reward, environment.tiles_visited))
 
             if done:
                 print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}'.format(e+1, play_episodes,

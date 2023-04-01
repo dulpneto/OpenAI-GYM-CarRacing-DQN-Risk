@@ -1,93 +1,60 @@
-import gymnasium as gym
 import cv2
-import numpy as np
+from bug_racing_env import CarRacing
 
 def convert_image_to_state(state):
-    # crop to remove low bar
-    cropped = state[0:80, 8:88]
-    # change to gray scale
-    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-
-    # removing green part and normalize
-    gray[gray <= 150] = 0
-    gray[gray > 150] = 1
-    return gray
+    state = cv2.cvtColor(state, cv2.COLOR_BGR2GRAY)
+    state = state.astype(float)
+    state /= 255.0
+    return state
 
 
 class CarRacingEnv:
     def __init__(
         self,
         render          = False,
-        frames_to_skip  = 50,  # number of frames environment will skip at the beginning
-        frames_to_run   = 200,  # number of frames to reach the goal
-        frames_to_die   = 50,  # number of frames it allows agent to get negative reward in a row
-        skip_frames     = 2,
-        slippery_tax    = 0.2, # chances of the action not to be executed
+        frames_to_skip  = 0,  # number of frames environment will skip at the beginning
+        skip_frames     = 2
     ):
         self.human_render   = render
         self.frames_to_skip = frames_to_skip
-        self.frames_to_run  = frames_to_run
-        self.frames_to_die  = frames_to_die
         self.skip_frames    = skip_frames
-        self.slippery_tax   = slippery_tax
         if self.human_render:
             # 5 actions: [do nothing, left, right, gas, brake]
-            self.env = gym.make('CarRacing-v2', continuous=False, domain_randomize=False, render_mode="human")
+            self.env = CarRacing(continuous=False, render_mode="human")
         else:
-            self.env = gym.make('CarRacing-v2', continuous=False, domain_randomize=False)
+            self.env = CarRacing(continuous=False)
 
-        self.frames = 0
-        self.tiles_visited = 0
-        self.negative_rewards = 0
         self.total_reward = 0
-        # self.init_env()
+        self.frames = 0
 
     def init_env(self):
         init_state, info = self.env.reset()
+        if self.frames_to_skip <= 0:
+            return init_state, info
         # skipping first N frames to avoid getting initial images
         for i in range(self.frames_to_skip+1):
             next_state_img, reward, terminated, truncated, info = self.env.step(0)
         self.frames = 0
-        self.tiles_visited = 0
-        self.negative_rewards = 0
-        self.total_reward = 0
         return next_state_img, info
 
     def step(self, action):
         self.frames += 1
 
-        # if is slippery move car ignores all actions and accelerate
-        if np.random.rand() < self.slippery_tax:
-            action = 3
-
         reward = 0
         for _ in range(self.skip_frames + 1):
             next_state_img, r, terminated, truncated, info = self.env.step(action)
-            if r > 0:
-                self.tiles_visited += 1
             done = (terminated or truncated)
             reward += r
             if done:
+                reward = r
                 break
-
-        if reward > 0:
-            self.negative_rewards = 0
-        else:
-            self.negative_rewards += 1
-
-        if self.frames >= self.frames_to_run:
-            terminated = True
-            if self.tiles_visited >= self.frames_to_run * 0.6:
-                reward += 10
-        elif self.negative_rewards >= self.frames_to_die:
-            truncated = True
-            reward -= 10
 
         self.total_reward += reward
         return convert_image_to_state(next_state_img), reward, terminated, truncated, info
 
     def reset(self):
         # run init to skip initial frames
+        self.total_reward = 0
         next_state_img, info = self.init_env()
         return convert_image_to_state(next_state_img), info
 
