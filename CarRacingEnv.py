@@ -25,6 +25,7 @@ class CarRacingEnv:
             self.env = CarRacing(continuous=False)
 
         self.total_reward = 0
+        self.tiles_visited = 0
         self.frames = 0
 
     def init_env(self):
@@ -50,15 +51,20 @@ class CarRacingEnv:
                 break
 
         self.total_reward += reward
+        self.tiles_visited = self.env.tile_visited_count
         return convert_image_to_state(next_state_img), reward, terminated, truncated, info
 
     def reset(self):
         # run init to skip initial frames
         self.total_reward = 0
+        self.tiles_visited = 0
         next_state_img, info = self.init_env()
         return convert_image_to_state(next_state_img), info
 
     def render(self):
         if self.human_render:
             self.env.render()
+
+    def close(self):
+        self.env.close()
 
