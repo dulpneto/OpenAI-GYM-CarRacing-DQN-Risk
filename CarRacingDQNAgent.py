@@ -9,7 +9,7 @@ import math
 class CarRacingDQNAgent:
     def __init__(
         self,
-        action_space    = 5,
+        action_space    = 3, # do nothing, left, right, (gas, brake) removed
         frame_stack_num = 3,
         memory_size     = 5000,
         gamma           = 0.95,  # discount rate

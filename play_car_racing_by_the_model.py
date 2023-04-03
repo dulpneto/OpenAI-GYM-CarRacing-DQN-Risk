@@ -13,9 +13,9 @@ if __name__ == '__main__':
     train_model = args.model
     play_episodes = args.episodes
 
-    env = CarRacingEnv(render=True, frames_to_run=200)
+    env = CarRacingEnv(render=True)
     # Set epsilon to 0 to ensure all actions are instructed by the agent
-    agent = CarRacingDQNAgent(epsilon=0, lamb=args.lamb)
+    agent = CarRacingDQNAgent(epsilon=0.0, lamb=args.lamb)
     agent.load(train_model)
 
     for e in range(play_episodes):
@@ -31,6 +31,7 @@ if __name__ == '__main__':
 
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
+            print(action)
             next_state, reward, terminated, truncated, info = env.step(action)
 
             done = (terminated or truncated)

@@ -56,16 +56,12 @@ if __name__ == '__main__':
             if EPISODES_TO_INIT:
                 road_run = (e % 2 == 0)
                 if road_run:
-                    if env.env.step_count < 30:
-                        action = 3
-                    elif 382 < env.env.step_count < 425:
+                    if 245 < env.env.step_count < 273:
                         action = 2
                     else:
                         action = 0
                 else:
-                    if env.env.step_count < 20:
-                        action = 3
-                    elif 130 < env.env.step_count < 150:
+                    if 100 < env.env.step_count < 110:
                         action = 2
                     else:
                         action = 0

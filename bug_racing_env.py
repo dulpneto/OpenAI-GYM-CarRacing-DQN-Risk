@@ -293,8 +293,10 @@ class CarRacing(gym.Env, EzPickle):
                 np.array([+1, +1, +1]).astype(np.float32),
             )  # steer, gas, brake
         else:
-            self.action_space = spaces.Discrete(5)
+            # self.action_space = spaces.Discrete(5)
             # do nothing, left, right, gas, brake
+            self.action_space = spaces.Discrete(3)
+            # do nothing, left, right
 
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(STATE_H, STATE_W, 3), dtype=np.uint8
@@ -574,13 +576,13 @@ class CarRacing(gym.Env, EzPickle):
             random_number = random.uniform(0, 1)
 
             if self.car.grass and random_number <= CHANCES_OF_LOSING_CONTROL:
-                self.car.steer(-0.6)
-                self.car.gas(0.4)
+                self.car.steer(-1.0)
+                #self.car.gas(0.4)
             else:
                 if self.continuous:
                     self.car.steer(-action[0])
-                    self.car.gas(action[1])
-                    self.car.brake(action[2])
+                    #self.car.gas(action[1])
+                    #self.car.brake(action[2])
 
                 else:
                     if not self.action_space.contains(action):
@@ -590,14 +592,18 @@ class CarRacing(gym.Env, EzPickle):
                         )
 
                     self.car.steer(-0.6 * (action == 1) + 0.6 * (action == 2))
-                    self.car.gas(0.2 * (action == 3))
-                    self.car.brake(0.8 * (action == 4))
+                    #self.car.gas(0.2 * (action == 3))
+                    #self.car.brake(0.8 * (action == 4))
 
         self.car.step(1.0 / FPS)
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
         self.t += 1.0 / FPS
 
         self.step_count += 1
+
+        if self.step_count < 2:
+            self.car.gas(1.0)
+
 
         self.state = self._render("state_pixels")
 
