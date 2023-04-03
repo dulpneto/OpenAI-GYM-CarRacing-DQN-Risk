@@ -41,7 +41,7 @@ SCALE = 6.0  # Track scale
 TRACK_RAD = 900 / SCALE  # Track is heavily morphed circle with this radius
 PLAYFIELD = 1500 / SCALE  # Game over boundary
 FPS = 50  # Frames per second
-ZOOM = .7  # Camera zoom
+ZOOM = 1.0  # Camera zoom
 ZOOM_FOLLOW = False  # Set to False for fixed view (don't use zoom)
 
 X_MAX = 250
@@ -69,6 +69,11 @@ MAX_SHAPE_DIM = (
 
 GOAL_START_IDX = 70
 GOAL_END_IDX = 75
+
+OUT_OF_BOUND_START_IDX = 110
+OUT_OF_BOUND_END_IDX = 250
+
+
 # GOAL_COLOR = np.array([0, 0, 139])
 GOAL_COLOR = np.array([255, 255, 255])
 
@@ -76,7 +81,7 @@ GRASS_COLOR = np.array([102, 230, 102])
 ROAD_COLOR = np.array([102, 102, 102])
 BG_COLOR = np.array([102, 204, 102])
 
-CHANCES_OF_LOSING_CONTROL = 0.0
+CHANCES_OF_LOSING_CONTROL = 0.2
 
 
 class FrictionDetector(contactListener):
@@ -261,6 +266,7 @@ class CarRacing(gym.Env, EzPickle):
         self.lap_complete_percent = lap_complete_percent
 
         self.done = False
+        self.step_count = 0
         self.contactListener_keepref = FrictionDetector(self, self.lap_complete_percent)
         self.world = Box2D.b2World((0, 0), contactListener=self.contactListener_keepref)
         self.screen: Optional[pygame.Surface] = None
@@ -483,9 +489,11 @@ class CarRacing(gym.Env, EzPickle):
                 t.color = GOAL_COLOR
                 t.goal = True
             elif GOAL_END_IDX <= t.idx:
-                t.color = BG_COLOR
+                if OUT_OF_BOUND_START_IDX <= t.idx < OUT_OF_BOUND_END_IDX:
+                    t.color = np.array([0, 0, 0])
+                else:
+                    t.color = BG_COLOR
                 t.grass = True
-                continue
             else:
                 t.color = ROAD_COLOR
 
@@ -542,6 +550,7 @@ class CarRacing(gym.Env, EzPickle):
         self.new_lap = False
         self.road_poly = []
         self.done = False
+        self.step_count = 0
 
         while True:
             success = self._create_track()
@@ -587,6 +596,8 @@ class CarRacing(gym.Env, EzPickle):
         self.car.step(1.0 / FPS)
         self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
         self.t += 1.0 / FPS
+
+        self.step_count += 1
 
         self.state = self._render("state_pixels")
 

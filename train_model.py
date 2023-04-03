@@ -8,13 +8,14 @@ from CarRacingEnv import CarRacingEnv
 
 from common_functions import generate_state_frame_stack_from_queue
 
-RENDER                        = False
+RENDER                        = True
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 1_000_000
 TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
+EPISODES_TO_INIT = 100
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a DQN agent to play CarRacing.')
@@ -50,6 +51,24 @@ if __name__ == '__main__':
 
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
+
+            # forcing an initial policy
+            if EPISODES_TO_INIT:
+                road_run = (e % 2 == 0)
+                if road_run:
+                    if env.env.step_count < 30:
+                        action = 3
+                    elif 382 < env.env.step_count < 425:
+                        action = 2
+                    else:
+                        action = 0
+                else:
+                    if env.env.step_count < 20:
+                        action = 3
+                    elif 130 < env.env.step_count < 150:
+                        action = 2
+                    else:
+                        action = 0
 
             next_state, reward, terminated, truncated, info = env.step(action)
             done = (terminated or truncated)

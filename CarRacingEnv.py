@@ -30,12 +30,12 @@ class CarRacingEnv:
 
     def init_env(self):
         init_state, info = self.env.reset()
+        self.frames = 0
         if self.frames_to_skip <= 0:
             return init_state, info
         # skipping first N frames to avoid getting initial images
         for i in range(self.frames_to_skip+1):
             next_state_img, reward, terminated, truncated, info = self.env.step(0)
-        self.frames = 0
         return next_state_img, info
 
     def step(self, action):
