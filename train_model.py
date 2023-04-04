@@ -44,6 +44,10 @@ if __name__ == '__main__':
         state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
         negative_reward_counter = 0
         done = False
+
+        run_fixed_policy = (e < EPISODES_TO_INIT or e % 7 == 0)
+        if run_fixed_policy:
+            print('FIXED POLICY {}'.format(e))
         
         while True:
             if RENDER:
@@ -53,7 +57,7 @@ if __name__ == '__main__':
             action = agent.act(current_state_frame_stack)
 
             # forcing an initial policy
-            if EPISODES_TO_INIT:
+            if run_fixed_policy:
                 road_run = (e % 2 == 0)
                 if road_run:
                     if 245 < env.env.step_count < 273:
@@ -68,6 +72,8 @@ if __name__ == '__main__':
 
             next_state, reward, terminated, truncated, info = env.step(action)
             done = (terminated or truncated)
+            if done:
+                print('Reward', reward)
 
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
