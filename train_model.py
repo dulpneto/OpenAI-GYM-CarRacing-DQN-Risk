@@ -17,7 +17,7 @@ UPDATE_TARGET_MODEL_FREQUENCY = 1
 EPISODES_TO_INIT = 100
 
 def log(txt, lamb):
-    with open('./save/train_{}.log'.format(lamb), 'a') as f:
+    with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
