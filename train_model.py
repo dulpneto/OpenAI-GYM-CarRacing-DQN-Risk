@@ -8,7 +8,6 @@ from CarRacingEnv import CarRacingEnv
 
 from common_functions import generate_state_frame_stack_from_queue
 
-RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 1_000_000
 TRAINING_BATCH_SIZE           = 64
@@ -17,6 +16,11 @@ SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 EPISODES_TO_INIT = 100
 
+def log(txt, lamb):
+    with open('./save/train_{}.log'.format(lamb), 'a') as f:
+        f.write(txt + '\n')
+    print(txt)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a DQN agent to play CarRacing.')
     parser.add_argument('-m', '--model', help='Specify the last trained model path if you want to continue training after it.')
@@ -24,12 +28,12 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=1.0, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
-    parser.add_argument('-f', '--progress_file', type=bool, default=False, help='save progress files, default to False.')
+    parser.add_argument('-r', '--render', type=bool, default=False, help='Render, default to False.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
 
-    env = CarRacingEnv(render=RENDER)
+    env = CarRacingEnv(render=args.render)
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
@@ -47,10 +51,10 @@ if __name__ == '__main__':
 
         run_fixed_policy = (e < EPISODES_TO_INIT or e % 7 == 0)
         if run_fixed_policy:
-            print('FIXED POLICY {}'.format(e))
+            log('FIXED POLICY {}'.format(e), args.lamb)
         
         while True:
-            if RENDER:
+            if args.render:
                 env.render()
 
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -72,8 +76,6 @@ if __name__ == '__main__':
 
             next_state, reward, terminated, truncated, info = env.step(action)
             done = (terminated or truncated)
-            if done:
-                print('Reward', reward)
 
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -83,7 +85,14 @@ if __name__ == '__main__':
             current_state = next_state
 
             if done:
-                print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, env.frames, env.tiles_visited, env.total_reward, float(agent.epsilon)))
+                log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}'.format(e,
+                                                                                                                ENDING_EPISODE,
+                                                                                                                env.frames,
+                                                                                                                env.tiles_visited,
+                                                                                                                env.total_reward,
+                                                                                                                float(
+                                                                                                                    agent.epsilon))
+                    , args.lamb)
                 break
 
             if len(agent.memory) > TRAINING_BATCH_SIZE and env.frames % TRAINING_MODEL_FREQUENCY == 0:
@@ -93,18 +102,7 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
+            agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
 
-            if agent.log_sum_exp:
-                agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
-            else:
-                agent.save('./save/trial_log_{}_{}.h5'.format(args.lamb, e))
-
-            if args.progress_file:
-                with open('./CURRENT_MODEL.txt', 'w') as f:
-                    f.write('./save/trial_{}_{}.h5'.format(args.lamb, e))
-                with open('./NEXT_EPISODE.txt', 'w') as f:
-                    f.write('{}'.format(e+1))
-                with open('./CURRENT_EPSILON.txt', 'w') as f:
-                    f.write('{}'.format(float(agent.epsilon)))
 
     env.close()
