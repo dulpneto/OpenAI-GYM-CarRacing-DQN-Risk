@@ -16,6 +16,11 @@ TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 
+def log(txt, lamb):
+    with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
+        f.write(txt + '\n')
+    print(txt)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a DQN agent to play CarRacing.')
     parser.add_argument('-m', '--model', help='Specify the last trained model path if you want to continue training after it.')
@@ -100,7 +105,7 @@ if __name__ == '__main__':
                     policy_type = 'RISK'
                 elif run_averse_policy:
                     policy_type = 'AVERSE'
-                print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type))
+                log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type))
                 break
 
             if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
