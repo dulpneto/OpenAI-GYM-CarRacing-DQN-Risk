@@ -190,9 +190,9 @@ class CarRiverCrossing(gym.Env, EzPickle):
         self,
         render_mode: Optional[str] = None,
         verbose: bool = False,
-        continuous: bool = True,
+        continuous: bool = False,
         play_field_area: int = 300,
-        zoom: float = 1.0,
+        zoom: float = 2.0,
         river_force: float = 1.0,
         river_drag_prob: float = 0.7
     ):
@@ -401,7 +401,6 @@ class CarRiverCrossing(gym.Env, EzPickle):
 
             touched_goal = any(t.goal for w in self.car.wheels for t in w.tiles)
             if touched_goal:
-                print('GOAL')
                 terminated = True
                 step_reward = 0
 
@@ -410,6 +409,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
             # out fo bounds - reset
             x, y = self.car.hull.position
             if abs(x) > self.play_field or abs(y) > self.play_field:
+                truncated = True
                 self.reset()
 
             # apply river force
@@ -422,7 +422,6 @@ class CarRiverCrossing(gym.Env, EzPickle):
                     for w in self.car.wheels:
                         x, y = w.position
                         w.position = (x, y - self.river_force)
-
 
         if self.render_mode == "human":
             self.render()
@@ -672,7 +671,7 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 quit = True
 
-    env = CarRiverCrossing(render_mode="human", play_field_area=300, zoom=1)
+    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1)
 
     quit = False
     while not quit:

@@ -4,11 +4,11 @@ logging.getLogger("tensorflow").setLevel(logging.WARNING)
 import argparse
 from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
-from CarRacingEnv import CarRacingEnv
+from car_river_crossing import CarRiverCrossing
 
 from common_functions import generate_state_frame_stack_from_queue
+from common_functions import process_state_image
 
-RENDER                        = False
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 10000
 TRAINING_BATCH_SIZE           = 64
@@ -23,12 +23,15 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=1.0, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
-    parser.add_argument('-f', '--progress_file', type=bool, default=False, help='save progress files, default to False.')
+    parser.add_argument('-r', '--render', type=bool, default=False, help='Render while training, default to False.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
 
-    env = CarRacingEnv(render=RENDER)
+    if args.render:
+        env = CarRiverCrossing(render_mode='human')
+    else:
+        env = CarRiverCrossing()
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
@@ -40,19 +43,49 @@ if __name__ == '__main__':
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
         current_state, info = env.reset()
+        current_state = process_state_image(current_state)
         state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
-        negative_reward_counter = 0
-        done = False
-        
-        while True:
-            if RENDER:
-                env.render()
 
+        time_frame_counter = 1
+        time_frame_counter_without_reset = 1
+        total_reward = 0
+        done = False
+
+        run_risk_policy = (e % 5 == 0)
+        run_averse_policy = (e == 1 or e % 10 == 0)
+
+        while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
-            action = agent.act(current_state_frame_stack)
+
+            if run_risk_policy:
+                if 100 < time_frame_counter_without_reset < 120:
+                    action = 1
+                elif time_frame_counter_without_reset % 2 == 0:
+                    action = 3
+                else:
+                    action = 0
+            elif run_averse_policy:
+                if time_frame_counter_without_reset % 4 == 0:
+                    action = 3
+                elif 250 < time_frame_counter_without_reset < 282:
+                    action = 1
+                elif 390 < time_frame_counter_without_reset < 415:
+                    action = 1
+                else:
+                    action = 0
+            else:
+                action = agent.act(current_state_frame_stack)
 
             next_state, reward, terminated, truncated, info = env.step(action)
-            done = (terminated or truncated)
+            next_state = process_state_image(next_state)
+            done = terminated
+
+            total_reward += reward
+            time_frame_counter += 1
+
+            if truncated:
+                time_frame_counter_without_reset = 0
+            time_frame_counter_without_reset += 1
 
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -62,28 +95,21 @@ if __name__ == '__main__':
             current_state = next_state
 
             if done:
-                print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}'.format(e, ENDING_EPISODE, env.frames, env.tiles_visited, env.total_reward, float(agent.epsilon)))
+                policy_type = 'AGENT'
+                if run_risk_policy:
+                    policy_type = 'RISK'
+                elif run_averse_policy:
+                    policy_type = 'AVERSE'
+                print('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type))
                 break
 
-            if len(agent.memory) > TRAINING_BATCH_SIZE and env.frames % TRAINING_MODEL_FREQUENCY == 0:
+            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
                 agent.replay_batch(TRAINING_BATCH_SIZE)
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-
-            if agent.log_sum_exp:
-                agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
-            else:
-                agent.save('./save/trial_log_{}_{}.h5'.format(args.lamb, e))
-
-            if args.progress_file:
-                with open('./CURRENT_MODEL.txt', 'w') as f:
-                    f.write('./save/trial_{}_{}.h5'.format(args.lamb, e))
-                with open('./NEXT_EPISODE.txt', 'w') as f:
-                    f.write('{}'.format(e+1))
-                with open('./CURRENT_EPSILON.txt', 'w') as f:
-                    f.write('{}'.format(float(agent.epsilon)))
+            agent.save('./save/trial_{}_{}.h5'.format(args.lamb, e))
 
     env.close()
