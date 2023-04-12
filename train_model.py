@@ -15,7 +15,7 @@ TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
-RESETS_BEFORE_FIXED_POLICY    = 100
+RESETS_BEFORE_FIXED_POLICY    = 10
 
 def log(txt, lamb):
     with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             time_frame_counter_without_reset += 1
 
             # when agent has not found his way we run a fixed policy
-            if not run_fixed_policy and truncated_count >= RESETS_BEFORE_FIXED_POLICY:
+            if not run_fixed_policy and truncated_count >= (RESETS_BEFORE_FIXED_POLICY/float(agent.epsilon)):
                 run_fixed_policy = True
 
             state_frame_stack_queue.append(next_state)
