@@ -339,12 +339,13 @@ class CarRiverCrossing(gym.Env, EzPickle):
         *,
         seed: Optional[int] = None,
         options: Optional[dict] = None,
+        reward: float = 0.0
     ):
         super().reset(seed=seed)
         self._destroy()
         self.world.contactListener_bug_workaround = FrictionDetector(self)
         self.world.contactListener = self.world.contactListener_bug_workaround
-        self.reward = 0.0
+        self.reward = reward
         self.tile_visited_count = 0
         self.t = 0.0
         self.new_lap = False
@@ -410,7 +411,8 @@ class CarRiverCrossing(gym.Env, EzPickle):
             x, y = self.car.hull.position
             if abs(x) > self.play_field or abs(y) > self.play_field:
                 truncated = True
-                self.reset()
+                # reset but keep reward
+                self.reset(reward=self.reward)
 
             # apply river force
             # it has a change to be dragged
@@ -687,6 +689,6 @@ if __name__ == "__main__":
                 print("\naction " + str([f"{x:+0.2f}" for x in a]))
                 print(f"step {steps} total_reward {total_reward:+0.2f}")
             steps += 1
-            if terminated or truncated or restart or quit:
+            if terminated or restart or quit:
                 break
     env.close()
