@@ -105,7 +105,7 @@ if __name__ == '__main__':
                     policy_type = 'RISK'
                 elif run_averse_policy:
                     policy_type = 'AVERSE'
-                log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type))
+                log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
                 break
 
             if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
