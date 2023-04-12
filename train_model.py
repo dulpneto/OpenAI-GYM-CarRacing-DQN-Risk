@@ -56,28 +56,31 @@ if __name__ == '__main__':
         total_reward = 0
         done = False
 
-        run_risk_policy = (e % 5 == 0)
-        run_averse_policy = (e == 1 or e % 10 == 0)
+        run_fixed_policy = False
+
+        truncated_count = 0
 
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            if run_risk_policy:
-                if 100 < time_frame_counter_without_reset < 120:
-                    action = 1
-                elif time_frame_counter_without_reset % 2 == 0:
-                    action = 3
+            if run_fixed_policy:
+                # run an averse policy 50% of the time and a risk 50%
+                if e % 2 == 0:
+                    if 100 < time_frame_counter_without_reset < 120:
+                        action = 1
+                    elif time_frame_counter_without_reset % 2 == 0:
+                        action = 3
+                    else:
+                        action = 0
                 else:
-                    action = 0
-            elif run_averse_policy:
-                if time_frame_counter_without_reset % 4 == 0:
-                    action = 3
-                elif 250 < time_frame_counter_without_reset < 282:
-                    action = 1
-                elif 390 < time_frame_counter_without_reset < 415:
-                    action = 1
-                else:
-                    action = 0
+                    if time_frame_counter_without_reset % 4 == 0:
+                        action = 3
+                    elif 250 < time_frame_counter_without_reset < 282:
+                        action = 1
+                    elif 390 < time_frame_counter_without_reset < 415:
+                        action = 1
+                    else:
+                        action = 0
             else:
                 action = agent.act(current_state_frame_stack)
 
@@ -90,7 +93,12 @@ if __name__ == '__main__':
 
             if truncated:
                 time_frame_counter_without_reset = 0
+                truncated_count += 1
             time_frame_counter_without_reset += 1
+
+            # when agent has not found his way we run a fixed policy
+            if not run_fixed_policy and truncated_count >= 0:
+                run_fixed_policy = True
 
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -101,10 +109,11 @@ if __name__ == '__main__':
 
             if done:
                 policy_type = 'AGENT'
-                if run_risk_policy:
-                    policy_type = 'RISK'
-                elif run_averse_policy:
-                    policy_type = 'AVERSE'
+                if run_fixed_policy:
+                    if e % 2 == 0:
+                        policy_type = 'RISK'
+                    else:
+                        policy_type = 'SAFE'
                 log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
                 break
 
