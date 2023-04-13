@@ -15,7 +15,7 @@ TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
-RESETS_BEFORE_FIXED_POLICY    = 10
+RESETS_BEFORE_FIXED_POLICY    = 1
 
 def log(txt, lamb):
     with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
