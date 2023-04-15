@@ -16,6 +16,7 @@ TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 1
+SKIP_FRAMES                   = 3
 
 def log(txt, lamb):
     with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
@@ -35,9 +36,9 @@ if __name__ == '__main__':
     print('Training with risk factor', args.lamb)
 
     if args.render:
-        env = CarRiverCrossing(render_mode='human')
+        env = CarRiverCrossing(render_mode='human', play_field_area=200, zoom=1.8)
     else:
-        env = CarRiverCrossing()
+        env = CarRiverCrossing(play_field_area=200, zoom=1.8)
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
@@ -67,25 +68,31 @@ if __name__ == '__main__':
             if run_fixed_policy:
                 # run an averse policy 50% of the time and a risk 50%
                 if e % 2 == 0:
-                    if 100 < time_frame_counter_without_reset < 120:
+                    if 5 < time_frame_counter_without_reset < 18:
                         action = 1
-                    elif time_frame_counter_without_reset % 2 == 0:
+                    elif time_frame_counter_without_reset % 2 == 0 or time_frame_counter_without_reset > 15:
                         action = 3
                     else:
                         action = 0
                 else:
-                    if time_frame_counter_without_reset % 4 == 0:
+                    if time_frame_counter_without_reset <= 30 and time_frame_counter_without_reset % 3 == 0:
                         action = 3
-                    elif 250 < time_frame_counter_without_reset < 282:
+                    elif 33 < time_frame_counter_without_reset < 41:
                         action = 1
-                    elif 390 < time_frame_counter_without_reset < 415:
+                    elif 58 < time_frame_counter_without_reset < 65:
                         action = 1
                     else:
                         action = 0
             else:
                 action = agent.act(current_state_frame_stack)
 
-            next_state, reward, terminated, truncated, info = env.step(action)
+            reward = 0
+            for _ in range(SKIP_FRAMES + 1):
+                next_state, r, terminated, truncated, info = env.step(action)
+                reward += r
+                if terminated or truncated:
+                    break
+
             next_state = process_state_image(next_state)
             done = terminated
 

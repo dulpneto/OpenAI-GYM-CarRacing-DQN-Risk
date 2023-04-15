@@ -485,7 +485,9 @@ class CarRiverCrossing(gym.Env, EzPickle):
         text = font.render("%04i" % self.reward, True, (255, 255, 255), (0, 0, 0))
         text_rect = text.get_rect()
         text_rect.center = (60, WINDOW_H - WINDOW_H * 2.5 / 40.0)
-        self.surf.blit(text, text_rect)
+        # hiding rewards when it is not human
+        if mode == "human":
+            self.surf.blit(text, text_rect)
 
         if mode == "human":
             pygame.event.pump()
@@ -673,7 +675,8 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 quit = True
 
-    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1)
+    # env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1)
+    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=200, zoom=1.8)
 
     quit = False
     while not quit:
