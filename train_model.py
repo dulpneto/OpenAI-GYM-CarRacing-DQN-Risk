@@ -35,10 +35,14 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
+    # play_area = 200
+    play_area = 300
+    zoom = 1.8
+
     if args.render:
-        env = CarRiverCrossing(render_mode='human', play_field_area=200, zoom=1.8)
+        env = CarRiverCrossing(render_mode='human', play_field_area=play_area, zoom=zoom)
     else:
-        env = CarRiverCrossing(play_field_area=200, zoom=1.8)
+        env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
     if args.model:
@@ -68,18 +72,16 @@ if __name__ == '__main__':
             if run_fixed_policy:
                 # run an averse policy 50% of the time and a risk 50%
                 if e % 2 == 0:
-                    if 5 < time_frame_counter_without_reset < 18:
+                    if 4 < time_frame_counter_without_reset < 12:
                         action = 1
-                    elif time_frame_counter_without_reset % 2 == 0 or time_frame_counter_without_reset > 15:
-                        action = 3
                     else:
-                        action = 0
-                else:
-                    if time_frame_counter_without_reset <= 30 and time_frame_counter_without_reset % 3 == 0:
                         action = 3
-                    elif 33 < time_frame_counter_without_reset < 41:
+                else:
+                    if time_frame_counter_without_reset <= 40 and time_frame_counter_without_reset % 3 == 0:
+                        action = 3
+                    elif 48 < time_frame_counter_without_reset < 55:
                         action = 1
-                    elif 58 < time_frame_counter_without_reset < 65:
+                    elif 82 < time_frame_counter_without_reset < 88:
                         action = 1
                     else:
                         action = 0
@@ -125,8 +127,8 @@ if __name__ == '__main__':
                 log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
                 break
 
-            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
-                agent.replay_batch(TRAINING_BATCH_SIZE)
+            #if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
+            #    agent.replay_batch(TRAINING_BATCH_SIZE)
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
