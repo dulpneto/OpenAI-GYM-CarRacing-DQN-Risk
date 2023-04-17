@@ -127,8 +127,8 @@ if __name__ == '__main__':
                 log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
                 break
 
-            #if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
-            #    agent.replay_batch(TRAINING_BATCH_SIZE)
+            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
+                agent.replay_batch(TRAINING_BATCH_SIZE)
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
