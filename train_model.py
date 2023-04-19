@@ -35,8 +35,8 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
-    # play_area = 200
-    play_area = 300
+    play_area = 200
+    # play_area = 300
     zoom = 1.8
 
     if args.render:
@@ -69,7 +69,8 @@ if __name__ == '__main__':
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            if run_fixed_policy:
+            # if run_fixed_policy:
+            if False:
                 # run an averse policy 50% of the time and a risk 50%
                 if e % 2 == 0:
                     if 4 < time_frame_counter_without_reset < 12:

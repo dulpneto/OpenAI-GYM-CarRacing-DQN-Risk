@@ -1,12 +1,15 @@
-import argparse
-from collections import deque
 
 import numpy as np
 import math
 
+from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
-from CarRacingEnv import CarRacingEnv
+from car_river_crossing import CarRiverCrossing
 from common_functions import generate_state_frame_stack_from_queue
+from common_functions import process_state_image
+
+SKIP_FRAMES = 3
+RENDER = False
 def log(txt):
     with open('./result.log', 'a') as f:
         f.write(txt + '\n')
@@ -14,7 +17,13 @@ def log(txt):
 
 if __name__ == '__main__':
 
-    env = CarRacingEnv(render=False, frames_to_run=200)
+    play_area = 200
+    zoom = 1.8
+
+    if RENDER:
+        env = CarRiverCrossing(render_mode='human', play_field_area=play_area, zoom=zoom)
+    else:
+        env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
     all_rewards = {}
     all_rewards_utility = {}
@@ -26,17 +35,17 @@ if __name__ == '__main__':
         all_rewards[lamb] = []
         all_rewards_utility[lamb] = {}
 
-        train_model = './save_data/slippery/trial_{}_10000.h5'.format(lamb)
+        train_model = './save/trial_{}_10000.h5'.format(lamb)
 
         # Set epsilon to 0 to ensure all actions are instructed by the agent
         agent = CarRacingDQNAgent(epsilon=0, lamb=lamb)
         agent.load(train_model)
 
-        play_episodes = 1000
-
+        play_episodes = 100
 
         for e in range(play_episodes):
             init_state, info = env.reset()
+            init_state = process_state_image(init_state)
 
             total_reward = 0
             punishment_counter = 0
@@ -46,13 +55,17 @@ if __name__ == '__main__':
             rewards = []
 
             while True:
-                env.render()
-
                 current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
                 action = agent.act(current_state_frame_stack)
-                next_state, reward, terminated, truncated, info = env.step(action)
+                reward = 0
+                for _ in range(SKIP_FRAMES + 1):
+                    next_state, r, terminated, truncated, info = env.step(action)
+                    reward += r
+                    if terminated or truncated:
+                        break
 
-                done = (terminated or truncated)
+                next_state = process_state_image(next_state)
+                done = terminated
 
                 init_state = next_state
 
@@ -65,12 +78,7 @@ if __name__ == '__main__':
 
                 if done:
 
-                    log('Risk: {}, Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}'.format(lamb,
-                                                                                                                  e + 1,
-                                                                                                                  play_episodes,
-                                                                                                                  env.frames,
-                                                                                                                  env.tiles_visited,
-                                                                                                                  env.total_reward))
+                    log('Risk: {}, Episode: {}/{}, Total Rewards: {}'.format(lamb, e + 1, play_episodes, total_reward))
 
                     for l2 in range(-100, 101, 25):
                         lamb2 = l2 / 100
@@ -98,14 +106,14 @@ if __name__ == '__main__':
 
     log('\n\n*** UTILITY ****\n')
 
-    v = 'XXXX'.format(lamb)
+    v = 'RISK'.format(lamb)
     for l in range(-100, 101, 25):
         lamb = l / 100
         v = v+'\t{}'.format(lamb)
     log(v)
     for l in range(-100, 101, 25):
         lamb = l / 100
-        v = 'LAMB {}'.format(lamb)
+        v = '{}'.format(lamb)
         for l2 in range(-100, 101, 25):
             lamb2 = l2 / 100
             v = v + '\t{}'.format(round(np.mean(all_rewards_utility[lamb][lamb2]), 2))
