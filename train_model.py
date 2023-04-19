@@ -69,20 +69,21 @@ if __name__ == '__main__':
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            # if run_fixed_policy:
-            if False:
+            if run_fixed_policy:
                 # run an averse policy 50% of the time and a risk 50%
                 if e % 2 == 0:
-                    if 4 < time_frame_counter_without_reset < 12:
+                    if 5 < time_frame_counter_without_reset < 18:
                         action = 1
+                    elif time_frame_counter_without_reset % 2 == 0 or time_frame_counter_without_reset > 15:
+                        action = 3
                     else:
-                        action = 3
+                        action = 0
                 else:
-                    if time_frame_counter_without_reset <= 40 and time_frame_counter_without_reset % 3 == 0:
+                    if time_frame_counter_without_reset <= 30 and time_frame_counter_without_reset % 3 == 0:
                         action = 3
-                    elif 48 < time_frame_counter_without_reset < 55:
+                    elif 33 < time_frame_counter_without_reset < 41:
                         action = 1
-                    elif 82 < time_frame_counter_without_reset < 88:
+                    elif 58 < time_frame_counter_without_reset < 65:
                         action = 1
                     else:
                         action = 0
