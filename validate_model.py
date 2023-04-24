@@ -17,7 +17,7 @@ def log(txt):
 
 if __name__ == '__main__':
 
-    play_area = 200
+    play_area = 300
     zoom = 1.8
 
     if RENDER:

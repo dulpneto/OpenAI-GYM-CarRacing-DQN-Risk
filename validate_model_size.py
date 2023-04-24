@@ -25,7 +25,7 @@ if __name__ == '__main__':
     log('size\trisk\tcompleted\ttotal')
 
     zoom = 1.8
-    play_area = 150
+    play_area = 250
 
     while True:
 

@@ -15,7 +15,7 @@ TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
-RESETS_BEFORE_FIXED_POLICY    = 1
+RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
 
 def log(txt, lamb):
@@ -35,8 +35,7 @@ if __name__ == '__main__':
 
     print('Training with risk factor', args.lamb)
 
-    play_area = 200
-    # play_area = 300
+    play_area = 300
     zoom = 1.8
 
     if args.render:
@@ -69,22 +68,19 @@ if __name__ == '__main__':
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            # if run_fixed_policy:
-            if False:
+            if run_fixed_policy:
                 # run an averse policy 50% of the time and a risk 50%
                 if e % 2 == 0:
-                    if 5 < time_frame_counter_without_reset < 18:
+                    if 16 < time_frame_counter_without_reset < 22:
                         action = 1
-                    elif time_frame_counter_without_reset % 2 == 0 or time_frame_counter_without_reset > 15:
-                        action = 3
                     else:
-                        action = 0
-                else:
-                    if time_frame_counter_without_reset <= 30 and time_frame_counter_without_reset % 3 == 0:
                         action = 3
-                    elif 33 < time_frame_counter_without_reset < 41:
+                else:
+                    if time_frame_counter_without_reset <= 25:
+                        action = 3
+                    elif time_frame_counter_without_reset < 30:
                         action = 1
-                    elif 58 < time_frame_counter_without_reset < 65:
+                    elif 39 < time_frame_counter_without_reset < 44:
                         action = 1
                     else:
                         action = 0

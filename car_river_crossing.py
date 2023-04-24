@@ -194,7 +194,8 @@ class CarRiverCrossing(gym.Env, EzPickle):
         play_field_area: int = 300,
         zoom: float = 2.0,
         river_force: float = 1.0,
-        river_drag_prob: float = 0.5
+        river_drag_prob: float = 0.4,
+        river_brake_force: float = 0.4
     ):
         EzPickle.__init__(
             self,
@@ -207,6 +208,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
         self.play_field = play_field_area / SCALE  # Game over boundary
         self.river_force = river_force
         self.river_drag_prob = river_drag_prob
+        self.river_brake_force = river_brake_force
 
         real_track_width = (TRACK_WIDTH * SCALE)/2
         adjusted_track = play_field_area / real_track_width
@@ -421,7 +423,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
             touched_tiles = sum(len(w.tiles) > 0 for w in self.car.wheels)
             if touched_tiles < 4:
                 if np.random.rand() <= self.river_drag_prob:
-                    self.car.brake(0.5)
+                    self.car.brake(self.river_brake_force)
                     # 1 touched mud on left
                     # 2 touched mud on top
                     # 3 touched mud on right
