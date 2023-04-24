@@ -9,6 +9,8 @@ from car_river_crossing import CarRiverCrossing
 from common_functions import generate_state_frame_stack_from_queue
 from common_functions import process_state_image
 
+from datetime import datetime
+
 STARTING_EPISODE              = 1
 ENDING_EPISODE                = 10000
 TRAINING_BATCH_SIZE           = 64
@@ -123,7 +125,7 @@ if __name__ == '__main__':
                         policy_type = 'RISK'
                     else:
                         policy_type = 'SAFE'
-                log('Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
+                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
                 break
 
             if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
