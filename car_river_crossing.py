@@ -194,7 +194,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
         play_field_area: int = 300,
         zoom: float = 2.0,
         river_force: float = 1.0,
-        river_drag_prob: float = 0.7
+        river_drag_prob: float = 0.5
     ):
         EzPickle.__init__(
             self,
@@ -208,9 +208,15 @@ class CarRiverCrossing(gym.Env, EzPickle):
         self.river_force = river_force
         self.river_drag_prob = river_drag_prob
 
+        real_track_width = (TRACK_WIDTH * SCALE)/2
+        adjusted_track = play_field_area / real_track_width
+        new_real_track_width = play_field_area / math.ceil(adjusted_track)
+        self.adjusted_track_width = (new_real_track_width*2)/SCALE
+        print('TRACK_WIDTH', TRACK_WIDTH, self.adjusted_track_width)
+
         self.grass_dim = self.play_field / 20.0
         self.max_shape_dim = (
-                max(self.grass_dim, TRACK_WIDTH, TRACK_DETAIL_STEP) * math.sqrt(2) * self.zoom * SCALE
+                max(self.grass_dim, self.adjusted_track_width, TRACK_DETAIL_STEP) * math.sqrt(2) * self.zoom * SCALE
         )
 
         self.continuous = continuous
@@ -264,6 +270,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
         self.road_color = np.array([102, 102, 102])
         self.bg_color = np.array([102, 102, 204])
         self.grass_color = np.array([102, 102, 230])
+        self.mud_color = np.array([0, 130, 0])
         self.goal_color = np.array([230, 102, 102])
 
     def _create_track(self):
@@ -271,32 +278,32 @@ class CarRiverCrossing(gym.Env, EzPickle):
 
         # draw left
         y1 = -self.play_field
-        x1 = -self.play_field
+        x1 = -self.play_field+self.adjusted_track_width
         while True:
             self._add_tile(x1, y1, False)
-            y1 += TRACK_WIDTH
-            if y1 >= self.play_field:
+            y1 += self.adjusted_track_width
+            if y1 >= (self.play_field - self.adjusted_track_width):
                 break
 
         # draw top
-        y1 = self.play_field - TRACK_WIDTH
-        x1 = -self.play_field
+        y1 = self.play_field - (2*self.adjusted_track_width)
+        x1 = -self.play_field + self.adjusted_track_width
         while True:
             self._add_tile(x1, y1, False)
-            x1 += TRACK_WIDTH
-            if x1 >= self.play_field:
+            x1 += self.adjusted_track_width
+            if x1 >= (self.play_field - self.adjusted_track_width):
                 break
 
         # draw right
-        y1 = self.play_field - TRACK_WIDTH
-        x1 = self.play_field - TRACK_WIDTH
+        y1 = self.play_field - (2*self.adjusted_track_width)
+        x1 = self.play_field - (2*self.adjusted_track_width)
         while True:
             if y1 <= -self.play_field:
                 self._add_tile(x1, y1, True)
             else:
                 self._add_tile(x1, y1, False)
-            y1 -= TRACK_WIDTH
-            if y1 <= -self.play_field - TRACK_WIDTH:
+            y1 -= self.adjusted_track_width
+            if y1 <= -self.play_field - self.adjusted_track_width:
                 break
         return True
 
@@ -306,16 +313,16 @@ class CarRiverCrossing(gym.Env, EzPickle):
             y1,
         )
         road1_r = (
-            x1 + TRACK_WIDTH,
+            x1 + self.adjusted_track_width,
             y1,
         )
         road2_l = (
             x1,
-            y1 + TRACK_WIDTH,
+            y1 + self.adjusted_track_width,
         )
         road2_r = (
-            x1 + TRACK_WIDTH,
-            y1 + TRACK_WIDTH,
+            x1 + self.adjusted_track_width,
+            y1 + self.adjusted_track_width,
         )
 
         vertices = [road1_l, road1_r, road2_r, road2_l]
@@ -387,12 +394,6 @@ class CarRiverCrossing(gym.Env, EzPickle):
                 self.car.gas(0.2 * (action == 3))
                 self.car.brake(0.8 * (action == 4))
 
-        self.car.step(1.0 / FPS)
-        self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
-        self.t += 1.0 / FPS
-
-        self.state = self._render("state_pixels")
-
         step_reward = -0.1
         terminated = False
         truncated = False
@@ -416,18 +417,45 @@ class CarRiverCrossing(gym.Env, EzPickle):
 
             # apply river force
             # it has a change to be dragged
-            touched_tiles = sum(len(w.tiles) for w in self.car.wheels)
-            if touched_tiles == 0:
+            # if any wheel touched the water it will be dragged
+            touched_tiles = sum(len(w.tiles) > 0 for w in self.car.wheels)
+            if touched_tiles < 4:
                 if np.random.rand() <= self.river_drag_prob:
-                    x, y = self.car.hull.position
-                    self.car.hull.position = (x, y - self.river_force)
+                    self.car.brake(0.5)
+                    # 1 touched mud on left
+                    # 2 touched mud on top
+                    # 3 touched mud on right
+                    touched_mud = 0
                     for w in self.car.wheels:
                         x, y = w.position
-                        w.position = (x, y - self.river_force)
+                        if x < -self.play_field + self.adjusted_track_width:
+                            touched_mud = 1
+                        elif x > self.play_field - self.adjusted_track_width:
+                            touched_mud = 3
+
+                    self.car.hull.position = self.recalculate_position(self.car.hull.position, touched_mud)
+                    for w in self.car.wheels:
+                        w.position = self.recalculate_position(w.position, touched_mud)
+
+        self.car.step(1.0 / FPS)
+        self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+        self.t += 1.0 / FPS
+
+        self.state = self._render("state_pixels")
 
         if self.render_mode == "human":
             self.render()
         return self.state, step_reward, terminated, truncated, {}
+
+    def recalculate_position(self, position, touched_mud):
+        x, y = position
+        if touched_mud == 1:
+            return x + self.river_force, y
+        elif touched_mud == 3:
+            return x - self.river_force, y
+        else:
+            return x, y - self.river_force
+
 
     def render(self):
         if self.render_mode is None:
@@ -533,6 +561,35 @@ class CarRiverCrossing(gym.Env, EzPickle):
             self._draw_colored_polygon(
                 self.surf, poly, self.grass_color, zoom, translation, angle
             )
+
+        # draw mud
+        mud_area_left = [
+            (-self.play_field + self.adjusted_track_width, self.play_field),
+            (-self.play_field + self.adjusted_track_width, -self.play_field),
+            (-self.play_field, -self.play_field),
+            (-self.play_field, self.play_field),
+        ]
+        mud_area_top = [
+            (self.play_field, self.play_field),
+            (self.play_field, self.play_field - self.adjusted_track_width),
+            (-self.play_field, self.play_field - self.adjusted_track_width),
+            (-self.play_field, self.play_field),
+        ]
+        mud_area_right = [
+            (self.play_field, self.play_field),
+            (self.play_field, -self.play_field),
+            (self.play_field - self.adjusted_track_width, -self.play_field),
+            (self.play_field - self.adjusted_track_width, self.play_field),
+        ]
+        self._draw_colored_polygon(
+            self.surf, mud_area_left, self.mud_color, zoom, translation, angle, clip=False
+        )
+        self._draw_colored_polygon(
+            self.surf, mud_area_top, self.mud_color, zoom, translation, angle, clip=False
+        )
+        self._draw_colored_polygon(
+            self.surf, mud_area_right, self.mud_color, zoom, translation, angle, clip=False
+        )
 
         # draw road
         for poly, color in self.road_poly:
@@ -676,7 +733,7 @@ if __name__ == "__main__":
                 quit = True
 
     # env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1)
-    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=200, zoom=1.8)
+    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1.8)
 
     quit = False
     while not quit:
@@ -688,7 +745,7 @@ if __name__ == "__main__":
             register_input()
             s, r, terminated, truncated, info = env.step(a)
             total_reward += r
-            if steps % 200 == 0 or terminated or truncated:
+            if terminated or truncated:
                 print("\naction " + str([f"{x:+0.2f}" for x in a]))
                 print(f"step {steps} total_reward {total_reward:+0.2f}")
             steps += 1
