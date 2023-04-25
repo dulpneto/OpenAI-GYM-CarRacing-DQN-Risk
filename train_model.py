@@ -19,6 +19,7 @@ SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
+MAXIMUM_FRAMES                = 1000
 
 def log(txt, lamb):
     with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
@@ -67,6 +68,8 @@ if __name__ == '__main__':
 
         truncated_count = 0
 
+        maximum_frames_reached = 0
+
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
@@ -102,6 +105,12 @@ if __name__ == '__main__':
             total_reward += reward
             time_frame_counter += 1
 
+            if time_frame_counter_without_reset > (MAXIMUM_FRAMES/float(agent.epsilon)):
+                maximum_frames_reached += 1
+                next_state, info = env.reset(reward=env.reward)
+                next_state = process_state_image(next_state)
+                truncated = True
+
             if truncated:
                 time_frame_counter_without_reset = 0
                 truncated_count += 1
@@ -125,7 +134,7 @@ if __name__ == '__main__':
                         policy_type = 'RISK'
                     else:
                         policy_type = 'SAFE'
-                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
+                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}, Max Famres: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type, maximum_frames_reached), args.lamb)
                 break
 
             if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:

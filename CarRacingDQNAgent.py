@@ -49,6 +49,9 @@ class CarRacingDQNAgent:
         return model
 
     def update_target_model(self):
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+
         self.target_model.set_weights(self.model.get_weights())
 
     def memorize(self, state, action, reward, next_state, done):
@@ -109,8 +112,6 @@ class CarRacingDQNAgent:
             train_target.append(current_qs)
 
         self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
 
     def utility(self, x):
         return np.sign(self.lamb) * math.exp(self.lamb * x)
