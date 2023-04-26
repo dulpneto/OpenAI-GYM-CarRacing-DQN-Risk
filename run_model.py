@@ -17,7 +17,7 @@ if __name__ == '__main__':
     train_model = args.model
     play_episodes = args.episodes
 
-    play_area = 200
+    play_area = 300
     zoom = 1.8
 
     if args.render:
