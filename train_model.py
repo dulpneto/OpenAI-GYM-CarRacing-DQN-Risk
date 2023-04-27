@@ -19,7 +19,7 @@ SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
-MAXIMUM_FRAMES                = 1000
+MAXIMUM_FRAMES                = 150
 
 def log(txt, lamb):
     with open('./save/result_train_{}.log'.format(lamb), 'a') as f:
@@ -105,7 +105,7 @@ if __name__ == '__main__':
             total_reward += reward
             time_frame_counter += 1
 
-            if time_frame_counter_without_reset > (MAXIMUM_FRAMES/float(agent.epsilon)):
+            if time_frame_counter_without_reset > MAXIMUM_FRAMES:
                 maximum_frames_reached += 1
                 next_state, info = env.reset(reward=env.reward)
                 next_state = process_state_image(next_state)
