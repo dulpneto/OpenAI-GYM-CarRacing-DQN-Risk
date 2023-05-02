@@ -10,12 +10,12 @@ from common_functions import process_state_image
 
 SKIP_FRAMES = 3
 RENDER = False
-TRUNCATED_THRESHOLD = 10
+TRUNCATED_THRESHOLD = 5
 PLAY_EPISODES = 10
 
 
 def log(txt):
-    with open('./result_size.log', 'a') as f:
+    with open('./result_size_3.log', 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     log('size\trisk\tcompleted\ttotal')
 
     zoom = 1.8
-    play_area = 250
+    play_area = 300
 
     while True:
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             all_rewards[lamb] = []
             all_rewards_utility[lamb] = {}
 
-            train_model = './save/trial_{}_10000.h5'.format(lamb)
+            train_model = './save_200/trial_{}_10000.h5'.format(lamb)
 
             # Set epsilon to 0 to ensure all actions are instructed by the agent
             agent = CarRacingDQNAgent(epsilon=0, lamb=lamb)
@@ -68,6 +68,8 @@ if __name__ == '__main__':
                 rewards = []
 
                 truncated_counter = 0
+
+                frames = 0
 
                 while True:
                     current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -91,6 +93,13 @@ if __name__ == '__main__':
                     rewards.append(reward)
 
                     state_frame_stack_queue.append(next_state)
+
+                    frames += 1
+
+                    if frames > 100:
+                        print('frames')
+                        break
+
 
                     # print('{} REWARD {} TILES {}'.format(environment.frames, reward, environment.tiles_visited))
 

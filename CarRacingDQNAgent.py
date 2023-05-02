@@ -125,3 +125,41 @@ class CarRacingDQNAgent:
 
     def save(self, name):
         self.target_model.save_weights(name)
+
+    @staticmethod
+    def get_fixed_policy(policy_id, time_frame_counter_without_reset):
+        if policy_id == 1:  # risk
+            if 17 < time_frame_counter_without_reset < 23:
+                action = 1
+            else:
+                action = 3
+        elif policy_id == 2:  # risk
+            if 18 < time_frame_counter_without_reset < 24:
+                action = 1
+            else:
+                action = 3
+        elif policy_id == 3:  # middle 2
+            if 25 <= time_frame_counter_without_reset < 30:
+                action = 1
+            elif 39 < time_frame_counter_without_reset < 44:
+                action = 1
+            else:
+                action = 3
+        elif policy_id == 4:  # middle
+            if 25 <= time_frame_counter_without_reset < 31:
+                action = 1
+            elif 40 < time_frame_counter_without_reset < 43:
+                action = 2
+            else:
+                action = 3
+        elif policy_id == 5:  # safe
+            if 25 <= time_frame_counter_without_reset < 29:
+                action = 1
+            elif 37 < time_frame_counter_without_reset < 43:
+                action = 1
+            else:
+                action = 3
+        else:
+            raise NotImplementedError('No policy found for {}.'.format(policy_id))
+
+        return action
