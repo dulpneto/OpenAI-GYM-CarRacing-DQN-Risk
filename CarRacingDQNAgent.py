@@ -139,23 +139,25 @@ class CarRacingDQNAgent:
             else:
                 action = 3
         elif policy_id == 3:  # middle 2
-            if 25 <= time_frame_counter_without_reset < 30:
+            if 24 <= time_frame_counter_without_reset < 28:
                 action = 1
-            elif 39 < time_frame_counter_without_reset < 44:
+            elif 33 < time_frame_counter_without_reset < 39:
                 action = 1
-            else:
-                action = 3
-        elif policy_id == 4:  # middle
-            if 25 <= time_frame_counter_without_reset < 31:
-                action = 1
-            elif 40 < time_frame_counter_without_reset < 43:
+            elif 45 < time_frame_counter_without_reset < 48:
                 action = 2
             else:
                 action = 3
-        elif policy_id == 5:  # safe
-            if 25 <= time_frame_counter_without_reset < 29:
+        elif policy_id == 4:  # middle
+            if 24 <= time_frame_counter_without_reset < 28:
                 action = 1
-            elif 37 < time_frame_counter_without_reset < 43:
+            elif 32 < time_frame_counter_without_reset < 37:
+                action = 1
+            else:
+                action = 3
+        elif policy_id == 5:  # safe
+            if 24 <= time_frame_counter_without_reset < 28:
+                action = 1
+            elif 35 < time_frame_counter_without_reset < 40:
                 action = 1
             else:
                 action = 3
