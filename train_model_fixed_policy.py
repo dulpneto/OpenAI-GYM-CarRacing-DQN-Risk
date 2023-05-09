@@ -22,7 +22,7 @@ SKIP_FRAMES                   = 3
 MAXIMUM_FRAMES                = 150
 
 def log(txt, lamb):
-    with open('./save/result_train_fixed_{}.log'.format(lamb), 'a') as f:
+    with open('./save_fixed/result_train_fixed_{}.log'.format(lamb), 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
@@ -122,6 +122,6 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save/trial_fixed_{}_{}.h5'.format(args.lamb, e))
+            agent.save('./save_fixed/trial_fixed_{}_{}.h5'.format(args.lamb, e))
 
     env.close()
