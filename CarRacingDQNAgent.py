@@ -12,7 +12,7 @@ class CarRacingDQNAgent:
         action_space    = 5,
         frame_stack_num = 3,
         memory_size     = 5000,
-        gamma           = 0.95,  # discount rate
+        gamma           = 0.98,  # discount rate
         epsilon         = 1.0,   # exploration rate
         epsilon_min     = 0.1,
         epsilon_decay   = 0.9999,
