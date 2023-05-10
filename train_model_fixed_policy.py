@@ -22,7 +22,7 @@ SKIP_FRAMES                   = 3
 MAXIMUM_FRAMES                = 150
 
 def log(txt, lamb):
-    with open('./save_fixed/result_train_fixed_{}.log'.format(lamb), 'a') as f:
+    with open('./save_fixed_model/result_train_{}.log'.format(lamb), 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', help='Specify the last trained model path if you want to continue training after it.')
     parser.add_argument('-s', '--start', type=int, help='The starting episode, default to 1.')
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
-    parser.add_argument('-p', '--epsilon', type=float, default=1.0, help='The starting epsilon of the agent, default to 1.0.')
+    parser.add_argument('-p', '--epsilon', type=float, default=0.1, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
     parser.add_argument('-r', '--render', type=bool, default=False, help='Render while training, default to False.')
     args = parser.parse_args()
@@ -54,9 +54,10 @@ if __name__ == '__main__':
     if args.end:
         ENDING_EPISODE = args.end
 
-    run_fixed_policy = 0
+    policy_id = 0
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
+
         current_state, info = env.reset()
         current_state = process_state_image(current_state)
         state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
@@ -66,19 +67,18 @@ if __name__ == '__main__':
         total_reward = 0
         done = False
 
-        run_fixed_policy += 1
+        policy_id += 1
 
-        if run_fixed_policy > 5:
-            run_fixed_policy = 1
-
-        truncated_count = 0
-
-        maximum_frames_reached = 0
+        if policy_id > 6:
+            policy_id = 1
 
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            action = agent.get_fixed_policy(run_fixed_policy, time_frame_counter_without_reset)
+            if policy_id <= 5:
+                action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
+            else:
+                action = agent.act(current_state_frame_stack)
 
             reward = 0
             for _ in range(SKIP_FRAMES + 1):
@@ -94,14 +94,11 @@ if __name__ == '__main__':
             time_frame_counter += 1
 
             if time_frame_counter_without_reset > MAXIMUM_FRAMES:
-                maximum_frames_reached += 1
-                next_state, info = env.reset(reward=env.reward)
-                next_state = process_state_image(next_state)
                 truncated = True
+                done = True
 
             if truncated:
                 time_frame_counter_without_reset = 0
-                truncated_count += 1
             time_frame_counter_without_reset += 1
 
             state_frame_stack_queue.append(next_state)
@@ -112,16 +109,22 @@ if __name__ == '__main__':
             current_state = next_state
 
             if done:
-                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}, Max Famres: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), run_fixed_policy, maximum_frames_reached), args.lamb)
-                break
+                policy_type = 'FIXED_{}'.format(policy_id)
+                if policy_id > 5:
+                    if truncated:
+                        policy_type = 'AGENT_TRUNC'
+                    else:
+                        policy_type = 'AGENT_DONE'
+                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
 
-            if len(agent.memory) > TRAINING_BATCH_SIZE and time_frame_counter % TRAINING_MODEL_FREQUENCY == 0:
-                agent.replay_batch(TRAINING_BATCH_SIZE)
+                agent.replay_batch(len(agent.memory))
+                agent.flush_memory()
+                break
 
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
 
         if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save_fixed/trial_fixed_{}_{}.h5'.format(args.lamb, e))
+            agent.save('./save_fixed_model/trial_{}_{}.h5'.format(args.lamb, e))
 
     env.close()

@@ -57,6 +57,9 @@ class CarRacingDQNAgent:
     def memorize(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
+    def flush_memory(self):
+        self.memory.clear()
+
     def act(self, state):
         if np.random.rand() > self.epsilon:
             act_values = self.model.predict(np.expand_dims(state, axis=0), verbose=0)
