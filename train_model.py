@@ -17,7 +17,7 @@ TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
-RESETS_BEFORE_FIXED_POLICY    = 2
+RESETS_BEFORE_FIXED_POLICY    = 5
 SKIP_FRAMES                   = 3
 MAXIMUM_FRAMES                = 150
 
@@ -117,8 +117,11 @@ if __name__ == '__main__':
             time_frame_counter_without_reset += 1
 
             # when agent has not found his way we run a fixed policy
-            if not run_fixed_policy and truncated_count >= (RESETS_BEFORE_FIXED_POLICY/float(agent.epsilon)):
-                run_fixed_policy = True
+            if not run_fixed_policy and truncated_count >= RESETS_BEFORE_FIXED_POLICY:
+                # running only on model
+                run_fixed_policy = False
+                # truncated too much end episode
+                done = True
 
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -128,12 +131,9 @@ if __name__ == '__main__':
             current_state = next_state
 
             if done:
-                policy_type = 'AGENT'
-                if run_fixed_policy:
-                    if e % 2 == 0:
-                        policy_type = 'RISK'
-                    else:
-                        policy_type = 'SAFE'
+                policy_type = 'DONE'
+                if truncated:
+                    policy_type = 'TRUNC'
                 log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}, Max Famres: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type, maximum_frames_reached), args.lamb)
                 break
 
