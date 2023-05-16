@@ -7,7 +7,7 @@ from common_functions import process_state_image
 import numpy as np
 
 SKIP_FRAMES = 3
-RENDER = True
+RENDER = False
 
 FILE_NAME = './rewards_r_bound.csv'
 
@@ -34,19 +34,28 @@ if __name__ == '__main__':
 
     all_rewards = {}
 
-    policies = [-0.5, 0.0, 0.5, 1.0]
+    train_models = [
+        # './r_bound_300_v2/trial_-0.5_3175.h5',
+        './r_bound_300_v2/trial_0.0_2025.h5',
+        './r_bound_300_v2/trial_0.0_2650.h5',
+        './r_bound_300_v2/trial_0.0_2775.h5',
+        './r_bound_300_v2/trial_0.0_2850.h5',
+        './r_bound_300_v2/trial_0.0_3375.h5'
+    ]
+
+    policies = range(len(train_models))
 
     for policy_id in policies:
 
         all_rewards[policy_id] = []
 
-        train_model = './r_bound_300//trial_{}_10000.h5'.format(policy_id)
+        train_model = train_models[policy_id]
 
         # Set epsilon to 0 to ensure all actions are instructed by the agent
         agent = CarRacingDQNAgent(epsilon=0, lamb=0.0)
         agent.load(train_model)
 
-        play_episodes = 10
+        play_episodes = 100
 
         e= 0
 
