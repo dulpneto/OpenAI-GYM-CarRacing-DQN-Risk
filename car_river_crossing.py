@@ -356,7 +356,6 @@ class CarRiverCrossing(gym.Env, EzPickle):
         self.world.contactListener = self.world.contactListener_bug_workaround
         self.reward = reward
         self.tile_visited_count = 0
-        self.last_tile_visited_count = 0
         self.t = 0.0
         self.new_lap = False
         self.road_poly = []
@@ -397,7 +396,7 @@ class CarRiverCrossing(gym.Env, EzPickle):
                 self.car.gas(0.2 * (action == 3))
                 self.car.brake(0.8 * (action == 4))
 
-        step_reward = -0.05
+        step_reward = -0.1
         terminated = False
         truncated = False
         if action is not None:  # First step without action, called from reset()
@@ -407,13 +406,9 @@ class CarRiverCrossing(gym.Env, EzPickle):
             touched_goal = any(t.goal for w in self.car.wheels for t in w.tiles)
             if touched_goal:
                 terminated = True
-                step_reward = len(self.road)
+                step_reward = 0
 
             self.reward += step_reward
-
-            if self.last_tile_visited_count < self.tile_visited_count:
-                self.reward += (self.tile_visited_count - self.last_tile_visited_count)
-                self.last_tile_visited_count = self.tile_visited_count
 
             # out fo bounds - reset
             x, y = self.car.hull.position
