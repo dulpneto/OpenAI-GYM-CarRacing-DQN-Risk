@@ -54,7 +54,7 @@ if __name__ == '__main__':
     if args.end:
         ENDING_EPISODE = args.end
 
-    policy_id = 0
+    policy_id = 4
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
 
@@ -67,18 +67,13 @@ if __name__ == '__main__':
         total_reward = 0
         done = False
 
-        policy_id += 1
-
-        if policy_id > 6:
-            policy_id = 1
-
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            if policy_id <= 5:
-                action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
-            else:
-                action = agent.act(current_state_frame_stack)
+            action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
+            model_value = agent.get_value(current_state_frame_stack, action)
+
+            log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb)
 
             reward = 0
             for _ in range(SKIP_FRAMES + 1):
@@ -93,10 +88,6 @@ if __name__ == '__main__':
             total_reward += reward
             time_frame_counter += 1
 
-            if time_frame_counter_without_reset > MAXIMUM_FRAMES:
-                truncated = True
-                done = True
-
             if truncated:
                 time_frame_counter_without_reset = 0
             time_frame_counter_without_reset += 1
@@ -104,7 +95,11 @@ if __name__ == '__main__':
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
+            for act_index in range(5):
+                if act_index == action:
+                    agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
+                else:
+                    agent.memorize(current_state_frame_stack, act_index, -1.0, next_state_frame_stack, done)
 
             current_state = next_state
 

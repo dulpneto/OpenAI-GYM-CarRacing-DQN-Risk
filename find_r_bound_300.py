@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     all_rewards = {}
 
-    policies = [-0.5, 0.0, 0.5, 1.0]
+    policies = [1.0, 0.5, 0.0, -0.5]
 
     for policy_id in policies:
 

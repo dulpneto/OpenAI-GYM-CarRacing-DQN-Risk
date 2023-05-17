@@ -68,6 +68,10 @@ class CarRacingDQNAgent:
             action = random.randrange(self.action_space)
         return action
 
+    def get_value(self, state, action):
+        act_values = self.model.predict(np.expand_dims(state, axis=0), verbose=0)
+        return act_values[0][action]
+
     def replay_batch(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
 

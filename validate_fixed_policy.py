@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # Set epsilon to 0 to ensure all actions are instructed by the agent
         agent = CarRacingDQNAgent(epsilon=0, lamb=0.0)
 
-        play_episodes = 1000
+        play_episodes = 10
 
         for e in range(play_episodes):
             init_state, info = env.reset()
