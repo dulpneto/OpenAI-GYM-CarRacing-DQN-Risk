@@ -46,7 +46,7 @@ if __name__ == '__main__':
     else:
         env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
-    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb)
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, bias_initializer=-50)
     if args.model:
         agent.load(args.model)
     if args.start:
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     if args.end:
         ENDING_EPISODE = args.end
 
-    policy_id = 4
+    policy_id = 0
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
 
@@ -66,6 +66,11 @@ if __name__ == '__main__':
         time_frame_counter_without_reset = 1
         total_reward = 0
         done = False
+
+        policy_id += 1
+
+        if policy_id > 5:
+            policy_id = 1
 
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
@@ -95,11 +100,7 @@ if __name__ == '__main__':
             state_frame_stack_queue.append(next_state)
             next_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            for act_index in range(5):
-                if act_index == action:
-                    agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
-                else:
-                    agent.memorize(current_state_frame_stack, act_index, -1.0, next_state_frame_stack, done)
+            agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
 
             current_state = next_state
 

@@ -4,6 +4,7 @@ from collections import deque
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.initializers import Constant
 import math
 
 class CarRacingDQNAgent:
@@ -18,7 +19,8 @@ class CarRacingDQNAgent:
         epsilon_decay   = 0.9999,
         learning_rate   = 0.001,
         lamb            = 0.0,
-        q_learning_alpha= 0.1
+        q_learning_alpha= 0.1,
+        bias_initializer= 0.0
     ):
         self.action_space    = action_space
         self.frame_stack_num = frame_stack_num
@@ -28,6 +30,7 @@ class CarRacingDQNAgent:
         self.epsilon_min     = epsilon_min
         self.epsilon_decay   = epsilon_decay
         self.learning_rate   = learning_rate
+        self.bias_initializer = bias_initializer
         self.model           = self.build_model()
         self.target_model    = self.build_model()
         self.lamb            = lamb
@@ -44,7 +47,7 @@ class CarRacingDQNAgent:
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Flatten())
         model.add(Dense(216, activation='relu'))
-        model.add(Dense(self.action_space, activation=None))
+        model.add(Dense(self.action_space, activation=None, bias_initializer=Constant(self.bias_initializer)))
         model.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=self.learning_rate, epsilon=1e-7))
         return model
 
