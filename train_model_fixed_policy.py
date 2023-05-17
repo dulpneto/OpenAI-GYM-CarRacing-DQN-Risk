@@ -113,7 +113,7 @@ if __name__ == '__main__':
                         policy_type = 'AGENT_DONE'
                 log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
 
-                agent.replay_batch(len(agent.memory))
+                agent.replay_batch(TRAINING_BATCH_SIZE)
                 agent.flush_memory()
                 break
 
