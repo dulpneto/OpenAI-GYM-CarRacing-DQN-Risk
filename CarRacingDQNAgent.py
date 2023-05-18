@@ -76,7 +76,11 @@ class CarRacingDQNAgent:
         return act_values[0][action]
 
     def replay_batch(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
+        sample_size = batch_size
+        if batch_size >= len(batch_size):
+            sample_size = len(batch_size)
+
+        minibatch = random.sample(self.memory, sample_size)
 
         current_states = np.array([transition[0] for transition in minibatch])
         current_qs_list = self.model.predict(current_states, verbose=0)

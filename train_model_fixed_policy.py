@@ -12,7 +12,7 @@ from common_functions import process_state_image
 from datetime import datetime
 
 STARTING_EPISODE              = 1
-ENDING_EPISODE                = 10000
+ENDING_EPISODE                = 100000
 TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
 SAVE_TRAINING_FREQUENCY       = 25
