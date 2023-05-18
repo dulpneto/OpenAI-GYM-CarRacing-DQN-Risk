@@ -76,9 +76,9 @@ class CarRacingDQNAgent:
         return act_values[0][action]
 
     def replay_batch(self, batch_size):
-        sample_size = batch_size
-        if batch_size >= len(batch_size):
-            sample_size = len(batch_size)
+        sample_size = len(self.memory)
+        if batch_size < sample_size:
+            sample_size = batch_size
 
         minibatch = random.sample(self.memory, sample_size)
 
