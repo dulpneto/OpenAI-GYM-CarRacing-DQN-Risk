@@ -48,7 +48,11 @@ if __name__ == '__main__':
     else:
         env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
-    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=-50)
+    bias_initializar = -50
+    if args.lamb > 0:
+        bias_initializar = -1.0
+
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=bias_initializar)
     if args.model:
         agent.load(args.model)
     if args.start:
