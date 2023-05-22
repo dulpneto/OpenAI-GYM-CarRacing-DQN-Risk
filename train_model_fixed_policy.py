@@ -15,14 +15,13 @@ STARTING_EPISODE              = 1
 ENDING_EPISODE                = 100000
 TRAINING_BATCH_SIZE           = 64
 TRAINING_MODEL_FREQUENCY      = 4
-SAVE_TRAINING_FREQUENCY       = 25
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
 MAXIMUM_FRAMES                = 150
 
-def log(txt, lamb):
-    with open('./save_fixed_model_099/result_train_{}.log'.format(lamb), 'a') as f:
+def log(txt, lamb, gamma):
+    with open('./save_fixed_model/result_train_{}_{}.log'.format(lamb, gamma), 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
@@ -33,10 +32,13 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=0.1, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
+    parser.add_argument('-g', '--gamma', type=float, default=0.99, help='The discount factor, default to 0.99.')
     parser.add_argument('-r', '--render', type=bool, default=False, help='Render while training, default to False.')
+    parser.add_argument('-f', '--frequency', type=int, default=25, help='Save training frequency, defautl to 25.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
+    print('Training with discount factor', args.gamma)
 
     play_area = 300
     zoom = 1.8
@@ -46,7 +48,7 @@ if __name__ == '__main__':
     else:
         env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
-    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, bias_initializer=-50)
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=-50)
     if args.model:
         agent.load(args.model)
     if args.start:
@@ -78,7 +80,7 @@ if __name__ == '__main__':
             action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
             model_value = agent.get_value(current_state_frame_stack, action)
 
-            log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb)
+            log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb, args.gamma)
 
             reward = 0
             for _ in range(SKIP_FRAMES + 1):
@@ -111,7 +113,7 @@ if __name__ == '__main__':
                         policy_type = 'AGENT_TRUNC'
                     else:
                         policy_type = 'AGENT_DONE'
-                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb)
+                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb, args.gamma)
 
                 agent.replay_batch(TRAINING_BATCH_SIZE)
                 agent.flush_memory()
@@ -120,7 +122,7 @@ if __name__ == '__main__':
         if e % UPDATE_TARGET_MODEL_FREQUENCY == 0:
             agent.update_target_model()
 
-        if e % SAVE_TRAINING_FREQUENCY == 0:
-            agent.save('./save_fixed_model_099/trial_{}_{}.h5'.format(args.lamb, e))
+        if e % args.frequency == 0:
+            agent.save('./save_fixed_model/trial_{}_{}_{}.h5'.format(args.lamb, args.gamma, e))
 
     env.close()
