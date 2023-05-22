@@ -7,9 +7,9 @@ from common_functions import process_state_image
 import numpy as np
 
 SKIP_FRAMES = 3
-RENDER = False
+RENDER = True
 
-FILE_NAME = './rewards_r_bound.csv'
+FILE_NAME = './rewards_fixed_policy_20230522.csv'
 
 def create_log():
     with open(FILE_NAME, 'w') as f:
@@ -35,12 +35,22 @@ if __name__ == '__main__':
     all_rewards = {}
 
     train_models = [
-        # './r_bound_300_v2/trial_-0.5_3175.h5',
-        './r_bound_300_v2/trial_0.0_2025.h5',
-        './r_bound_300_v2/trial_0.0_2650.h5',
-        './r_bound_300_v2/trial_0.0_2775.h5',
-        './r_bound_300_v2/trial_0.0_2850.h5',
-        './r_bound_300_v2/trial_0.0_3375.h5'
+        './save_fixed_model/trial_-2.0_30000.h5',
+        # NOT './save_fixed_model/trial_-2.0_40000.h5',
+        # NOT './save_fixed_model/trial_-2.0_50000.h5',
+        './save_fixed_model/trial_-1.0_30000.h5',
+        './save_fixed_model/trial_-1.0_40000.h5',
+        './save_fixed_model/trial_-1.0_50000.h5',
+        # NOT './save_fixed_model/trial_0.0_30000.h5',
+        # NOT './save_fixed_model/trial_0.0_40000.h5',
+        './save_fixed_model/trial_0.0_50000.h5',
+        './save_fixed_model/trial_0.0_60000.h5',
+        # NOT './save_fixed_model/trial_1.0_30000.h5',
+        # NOT './save_fixed_model/trial_1.0_40000.h5',
+        # NOT './save_fixed_model/trial_1.0_50000.h5',
+        # NOT './save_fixed_model/trial_2.0_30000.h5',
+        # NOT './save_fixed_model/trial_2.0_40000.h5',
+        # NOT './save_fixed_model/trial_2.0_50000.h5'
     ]
 
     policies = range(len(train_models))
@@ -51,13 +61,17 @@ if __name__ == '__main__':
 
         train_model = train_models[policy_id]
 
+        print('Model', train_model)
+
         # Set epsilon to 0 to ensure all actions are instructed by the agent
         agent = CarRacingDQNAgent(epsilon=0, lamb=0.0)
         agent.load(train_model)
 
-        play_episodes = 100
+        play_episodes = 2
 
         e= 0
+
+        reset_count = 0
 
         while e < play_episodes:
             init_state, info = env.reset()
@@ -70,9 +84,19 @@ if __name__ == '__main__':
 
             rewards = []
 
+            #if reset_count > 4:
+            #    print('NOT ', train_model)
+            #    break
+
             while True:
+
                 current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
                 action = agent.act(current_state_frame_stack)
+                if train_model in ['./save_fixed_model/trial_0.0_50000.h5',
+                                   './save_fixed_model/trial_0.0_60000.h5']:
+                    env.step(action)
+                env.step(action)
+
                 reward = 0
                 for _ in range(SKIP_FRAMES + 1):
                     next_state, r, terminated, truncated, info = env.step(action)
@@ -92,6 +116,7 @@ if __name__ == '__main__':
 
                 if time_frame_counter > 200:
                     print('reset')
+                    reset_count += 1
                     break
 
                 if truncated:
