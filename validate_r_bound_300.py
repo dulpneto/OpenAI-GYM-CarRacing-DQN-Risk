@@ -7,7 +7,7 @@ from common_functions import process_state_image
 import numpy as np
 
 SKIP_FRAMES = 3
-RENDER = True
+RENDER = False
 
 FILE_NAME = './rewards_fixed_policy_20230522.csv'
 
