@@ -35,22 +35,12 @@ if __name__ == '__main__':
     all_rewards = {}
 
     train_models = [
-        './save_fixed_model/trial_-2.0_30000.h5',
-        # NOT './save_fixed_model/trial_-2.0_40000.h5',
-        # NOT './save_fixed_model/trial_-2.0_50000.h5',
-        './save_fixed_model/trial_-1.0_30000.h5',
-        './save_fixed_model/trial_-1.0_40000.h5',
-        './save_fixed_model/trial_-1.0_50000.h5',
-        # NOT './save_fixed_model/trial_0.0_30000.h5',
-        # NOT './save_fixed_model/trial_0.0_40000.h5',
-        './save_fixed_model/trial_0.0_50000.h5',
-        './save_fixed_model/trial_0.0_60000.h5',
-        # NOT './save_fixed_model/trial_1.0_30000.h5',
-        # NOT './save_fixed_model/trial_1.0_40000.h5',
-        # NOT './save_fixed_model/trial_1.0_50000.h5',
-        # NOT './save_fixed_model/trial_2.0_30000.h5',
-        # NOT './save_fixed_model/trial_2.0_40000.h5',
-        # NOT './save_fixed_model/trial_2.0_50000.h5'
+        './save_fixed_model_test/trial_-2.0_30000.h5',
+        './save_fixed_model_test/trial_-1.0_30000.h5',
+        './save_fixed_model_test/trial_-1.0_40000.h5',
+        './save_fixed_model_test/trial_-1.0_50000.h5',
+        './save_fixed_model_test/trial_0.0_50000.h5',
+        './save_fixed_model_test/trial_0.0_60000.h5',
     ]
 
     policies = range(len(train_models))
