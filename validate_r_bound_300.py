@@ -57,7 +57,7 @@ if __name__ == '__main__':
         agent = CarRacingDQNAgent(epsilon=0, lamb=0.0)
         agent.load(train_model)
 
-        play_episodes = 2
+        play_episodes = 100
 
         e= 0
 
