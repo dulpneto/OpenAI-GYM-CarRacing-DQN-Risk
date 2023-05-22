@@ -85,7 +85,6 @@ if __name__ == '__main__':
                 if train_model in ['./save_fixed_model/trial_0.0_50000.h5',
                                    './save_fixed_model/trial_0.0_60000.h5']:
                     env.step(action)
-                env.step(action)
 
                 reward = 0
                 for _ in range(SKIP_FRAMES + 1):
