@@ -50,7 +50,9 @@ if __name__ == '__main__':
 
     bias_initializar = -50
     if args.lamb > 0:
-        bias_initializar = -2.0
+        bias_initializar = -3.0
+    if args.lamb > 1:
+        bias_initializar = -1.5
 
     agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=bias_initializar)
     if args.model:
