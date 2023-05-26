@@ -8,6 +8,7 @@ from car_river_crossing import CarRiverCrossing
 
 from common_functions import generate_state_frame_stack_from_queue
 from common_functions import process_state_image
+import cv2
 
 from datetime import datetime
 
@@ -19,11 +20,19 @@ UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
 MAXIMUM_FRAMES                = 150
+RESULT_FOLDER                 = 'save_fixed_model'
+SAVE_IMG = False
 
 def log(txt, lamb, gamma):
-    with open('./save_fixed_model/result_train_{}_{}.log'.format(lamb, gamma), 'a') as f:
+    with open('./{}/result_train_{}_{}.log'.format(RESULT_FOLDER, lamb, gamma), 'a') as f:
         f.write(txt + '\n')
     print(txt)
+
+def save_image(img, frame, action):
+    if SAVE_IMG:
+        cv2.imwrite("./img_train/frame_{}.png".format(frame), img)
+        with open('./img_train/result.log', 'a') as f:
+            f.write('frame {}, action {}\n'.format(frame, action))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a DQN agent to play CarRacing.')
@@ -32,9 +41,9 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=0.1, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
-    parser.add_argument('-g', '--gamma', type=float, default=0.99, help='The discount factor, default to 0.99.')
+    parser.add_argument('-g', '--gamma', type=float, default=1.0, help='The discount factor, default to 0.99.')
     parser.add_argument('-r', '--render', type=bool, default=False, help='Render while training, default to False.')
-    parser.add_argument('-f', '--frequency', type=int, default=25, help='Save training frequency, defautl to 25.')
+    parser.add_argument('-f', '--frequency', type=int, default=1000, help='Save training frequency, defautl to 1000.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
@@ -64,16 +73,20 @@ if __name__ == '__main__':
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
 
+        time_frame_counter = 1
+        time_frame_counter_without_reset = 1
+
         current_state, info = env.reset()
+        state_img = current_state
         current_state = process_state_image(current_state)
         state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
 
-        time_frame_counter = 1
-        time_frame_counter_without_reset = 1
+
         total_reward = 0
         done = False
 
         policy_id += 1
+        #policy_id = 5
 
         if policy_id > 5:
             policy_id = 1
@@ -82,6 +95,7 @@ if __name__ == '__main__':
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
             action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
+            save_image(state_img, time_frame_counter, action)
             model_value = agent.get_value(current_state_frame_stack, action)
 
             log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb, args.gamma)
@@ -92,7 +106,7 @@ if __name__ == '__main__':
                 reward += r
                 if terminated or truncated:
                     break
-
+            state_img = next_state
             next_state = process_state_image(next_state)
             done = terminated
 
@@ -119,7 +133,7 @@ if __name__ == '__main__':
                         policy_type = 'AGENT_DONE'
                 log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb, args.gamma)
 
-                agent.replay_batch(TRAINING_BATCH_SIZE)
+                agent.replay_batch(len(agent.memory))
                 agent.flush_memory()
                 break
 
@@ -127,6 +141,10 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % args.frequency == 0:
-            agent.save('./save_fixed_model/trial_{}_{}_{}.h5'.format(args.lamb, args.gamma, e))
+            agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
+
+        #run once when save img
+        if SAVE_IMG:
+            break
 
     env.close()

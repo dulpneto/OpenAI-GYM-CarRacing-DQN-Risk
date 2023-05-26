@@ -1,4 +1,5 @@
 import argparse
+import cv2
 from collections import deque
 from CarRacingDQNAgent import CarRacingDQNAgent
 from car_river_crossing import CarRiverCrossing
@@ -6,6 +7,13 @@ from common_functions import generate_state_frame_stack_from_queue
 from common_functions import process_state_image
 
 SKIP_FRAMES                   = 3
+SAVE_IMG = False
+
+def save_image(img, frame, train, model):
+    if SAVE_IMG:
+        cv2.imwrite("./img_run/frame_{}.png".format(frame), img)
+        with open('./img_run/result.log', 'a') as f:
+            f.write('frame {}, train {}, model {}\n'.format(frame, train, model))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play CarRacing by the trained model.')
@@ -30,19 +38,23 @@ if __name__ == '__main__':
     agent.load(train_model)
 
     for e in range(play_episodes):
-        init_state, info = env.reset()
-        init_state = process_state_image(init_state)
+        current_state, info = env.reset()
+        state_img = current_state
+        current_state = process_state_image(current_state)
+        state_frame_stack_queue = deque([current_state] * agent.frame_stack_num, maxlen=agent.frame_stack_num)
 
         total_reward = 0
-        state_frame_stack_queue = deque([init_state]*agent.frame_stack_num, maxlen=agent.frame_stack_num)
         time_frame_counter = 1
         
         while True:
-            env.render()
-
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
-            next_state, reward, terminated, truncated, info = env.step(action)
+
+            policy_id = 5
+            action_fixed = agent.get_fixed_policy(policy_id, time_frame_counter)
+
+            save_image(state_img, time_frame_counter, action_fixed, action)
+            print('FRAME: {}, FIXED: {}, MODEL:{}'.format(time_frame_counter, action_fixed, action))
 
             reward = 0
             for _ in range(SKIP_FRAMES + 1):
@@ -50,7 +62,7 @@ if __name__ == '__main__':
                 reward += r
                 if terminated or truncated:
                     break
-
+            state_img = next_state
             next_state = process_state_image(next_state)
             done = terminated
 
