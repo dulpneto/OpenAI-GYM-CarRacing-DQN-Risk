@@ -149,7 +149,7 @@ class CarRacingDQNAgent:
             else:
                 action = 3
         elif policy_id == 2:  # risk
-            if 18 < time_frame_counter_without_reset < 24:
+            if 18 < time_frame_counter_without_reset < 25:
                 action = 1
             else:
                 action = 3

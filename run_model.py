@@ -50,7 +50,7 @@ if __name__ == '__main__':
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
             action = agent.act(current_state_frame_stack)
 
-            policy_id = 5
+            policy_id = 1
             action_fixed = agent.get_fixed_policy(policy_id, time_frame_counter)
 
             save_image(state_img, time_frame_counter, action_fixed, action)

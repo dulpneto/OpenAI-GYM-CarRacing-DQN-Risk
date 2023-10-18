@@ -41,9 +41,9 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', type=int, help='The ending episode, default to 1000.')
     parser.add_argument('-p', '--epsilon', type=float, default=0.1, help='The starting epsilon of the agent, default to 1.0.')
     parser.add_argument('-l', '--lamb', type=float, default=0.0, help='The risk param, default to 0.0.')
-    parser.add_argument('-g', '--gamma', type=float, default=1.0, help='The discount factor, default to 0.99.')
+    parser.add_argument('-g', '--gamma', type=float, default=0.99, help='The discount factor, default to 0.99.')
     parser.add_argument('-r', '--render', type=bool, default=False, help='Render while training, default to False.')
-    parser.add_argument('-f', '--frequency', type=int, default=1000, help='Save training frequency, defautl to 1000.')
+    parser.add_argument('-f', '--frequency', type=int, default=100, help='Save training frequency, defautl to 1000.')
     args = parser.parse_args()
 
     print('Training with risk factor', args.lamb)
@@ -57,11 +57,7 @@ if __name__ == '__main__':
     else:
         env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
-    bias_initializar = -50
-    if args.lamb > 0:
-        bias_initializar = 0
-
-    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=bias_initializar)
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma)
     if args.model:
         agent.load(args.model)
     if args.start:

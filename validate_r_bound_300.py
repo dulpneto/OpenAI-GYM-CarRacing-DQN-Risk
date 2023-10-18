@@ -7,9 +7,9 @@ from common_functions import process_state_image
 import numpy as np
 
 SKIP_FRAMES = 3
-RENDER = False
+RENDER = True
 
-FILE_NAME = './rewards_fixed_policy_20230522.csv'
+FILE_NAME = './rewards_fixed_policy_20230522_4.csv'
 
 def create_log():
     with open(FILE_NAME, 'w') as f:
@@ -36,11 +36,10 @@ if __name__ == '__main__':
 
     train_models = [
         './save_fixed_model_test/trial_-2.0_30000.h5',
-        './save_fixed_model_test/trial_-1.0_30000.h5',
-        './save_fixed_model_test/trial_-1.0_40000.h5',
         './save_fixed_model_test/trial_-1.0_50000.h5',
-        './save_fixed_model_test/trial_0.0_50000.h5',
-        './save_fixed_model_test/trial_0.0_60000.h5',
+        #'./save_fixed_model_test/trial_0.0_60000.h5',
+        #'./save_fixed_model_test/trial_1.0_34500.h5',
+        #'./save_fixed_model_test/trial_1.0_35000.h5',
     ]
 
     policies = range(len(train_models))
@@ -57,7 +56,7 @@ if __name__ == '__main__':
         agent = CarRacingDQNAgent(epsilon=0, lamb=0.0)
         agent.load(train_model)
 
-        play_episodes = 100
+        play_episodes = 2
 
         e= 0
 
@@ -82,12 +81,20 @@ if __name__ == '__main__':
 
                 current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
                 action = agent.act(current_state_frame_stack)
-                if train_model in ['./save_fixed_model/trial_0.0_50000.h5',
-                                   './save_fixed_model/trial_0.0_60000.h5']:
-                    env.step(action)
+                #if 'trial_0.0_60000' in train_model:
+                #    env.step(action)
+                #    print('ACTION', action)
+                #env.step(action)
+
+                if 'trial_1.0_34500' in train_model and total_reward > -8.5:
+                    action = 3
 
                 reward = 0
-                for _ in range(SKIP_FRAMES + 1):
+                skip_frames_adjusted = SKIP_FRAMES + 1
+                if 'trial_0.0_60000' in train_model:
+                    skip_frames_adjusted += 1
+
+                for _ in range(skip_frames_adjusted):
                     next_state, r, terminated, truncated, info = env.step(action)
                     reward += r
                     if terminated or truncated:
@@ -124,7 +131,7 @@ if __name__ == '__main__':
             all_rewards[policy_id].append(total_reward)
 
     print('\n\n*** FINAL ****\n')
-    print('RISK\tMEAN\tVAR')
+    print('RISK\tMEAN\tVAR\tMIN\tMAX')
     for policy_id in policies:
-        print('{}\t{}\t{}'.format(policy_id, round(np.mean(all_rewards[policy_id]), 2), round(np.var(all_rewards[policy_id]), 2)))
+        print('{}\t{}\t{}\t{}\t{}'.format(policy_id, round(np.mean(all_rewards[policy_id]), 2), round(np.var(all_rewards[policy_id]), 2),round(np.min(all_rewards[policy_id]), 2),round(np.max(all_rewards[policy_id]), 2)))
 
