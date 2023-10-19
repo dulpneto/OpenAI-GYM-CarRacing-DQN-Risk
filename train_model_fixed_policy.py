@@ -57,7 +57,9 @@ if __name__ == '__main__':
     else:
         env = CarRiverCrossing(play_field_area=play_area, zoom=zoom)
 
-    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma)
+    bias_initializer = -10.0
+
+    agent = CarRacingDQNAgent(epsilon=args.epsilon, lamb=args.lamb, gamma=args.gamma, bias_initializer=bias_initializer)
     if args.model:
         agent.load(args.model)
     if args.start:
@@ -65,7 +67,7 @@ if __name__ == '__main__':
     if args.end:
         ENDING_EPISODE = args.end
 
-    policy_id = 0
+    policy_id = 2
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
 
@@ -85,7 +87,7 @@ if __name__ == '__main__':
         #policy_id = 5
 
         if policy_id > 6:
-            policy_id = 1
+            policy_id = 3
 
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
