@@ -125,8 +125,7 @@ class CarRacingDQNAgent:
             train_state.append(current_state)
             train_target.append(current_qs)
 
-        for i in range(100):
-            self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
+        self.model.fit(np.array(train_state), np.array(train_target), epochs=1, verbose=0)
 
     def utility(self, x):
         return np.sign(self.lamb) * math.exp(self.lamb * x)

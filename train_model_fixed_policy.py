@@ -19,7 +19,7 @@ TRAINING_MODEL_FREQUENCY      = 4
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
-MAXIMUM_FRAMES                = 150
+MAXIMUM_FRAMES                = 250
 RESULT_FOLDER                 = 'save_fixed_model'
 SAVE_IMG = False
 
@@ -84,13 +84,16 @@ if __name__ == '__main__':
         policy_id += 1
         #policy_id = 5
 
-        if policy_id > 5:
+        if policy_id > 6:
             policy_id = 1
 
         while True:
             current_state_frame_stack = generate_state_frame_stack_from_queue(state_frame_stack_queue)
 
-            action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
+            if policy_id <= 5:
+                action = agent.get_fixed_policy(policy_id, time_frame_counter_without_reset)
+            else:
+                action = agent.act(current_state_frame_stack)
             save_image(state_img, time_frame_counter, action)
             model_value = agent.get_value(current_state_frame_stack, action)
 
@@ -119,6 +122,11 @@ if __name__ == '__main__':
             agent.memorize(current_state_frame_stack, action, reward, next_state_frame_stack, done)
 
             current_state = next_state
+
+            # finishes no fixed policy
+            if policy_id > 5 and time_frame_counter > MAXIMUM_FRAMES:
+                done = True
+                truncated = True
 
             if done:
                 policy_type = 'FIXED_{}'.format(policy_id)
