@@ -19,7 +19,7 @@ TRAINING_MODEL_FREQUENCY      = 4
 UPDATE_TARGET_MODEL_FREQUENCY = 1
 RESETS_BEFORE_FIXED_POLICY    = 2
 SKIP_FRAMES                   = 3
-MAXIMUM_FRAMES                = 250
+MAXIMUM_FRAMES                = 1000
 RESULT_FOLDER                 = 'save_fixed_model'
 SAVE_IMG = False
 
@@ -68,6 +68,8 @@ if __name__ == '__main__':
         ENDING_EPISODE = args.end
 
     policy_id = 2
+
+    saved_already = False
 
     for e in range(STARTING_EPISODE, ENDING_EPISODE+1):
 
@@ -137,6 +139,8 @@ if __name__ == '__main__':
                         policy_type = 'AGENT_TRUNC'
                     else:
                         policy_type = 'AGENT_DONE'
+                        agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
+                        saved_already = True
                 log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb, args.gamma)
 
                 agent.replay_batch(len(agent.memory))
@@ -147,7 +151,10 @@ if __name__ == '__main__':
             agent.update_target_model()
 
         if e % args.frequency == 0:
-            agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
+            if saved_already:
+                saved_already = False
+            else:
+                agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
 
         #run once when save img
         if SAVE_IMG:
