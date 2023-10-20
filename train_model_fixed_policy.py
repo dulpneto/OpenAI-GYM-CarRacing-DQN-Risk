@@ -24,7 +24,7 @@ RESULT_FOLDER                 = 'save_fixed_model'
 SAVE_IMG = False
 
 def log(txt, lamb, gamma):
-    with open('./{}/result_train_{}_{}.log'.format(RESULT_FOLDER, lamb, gamma), 'a') as f:
+    with open('./{}/result_2_train_{}_{}.log'.format(RESULT_FOLDER, lamb, gamma), 'a') as f:
         f.write(txt + '\n')
     print(txt)
 
