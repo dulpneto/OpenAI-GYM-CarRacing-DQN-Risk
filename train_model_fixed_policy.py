@@ -86,7 +86,7 @@ if __name__ == '__main__':
         done = False
 
         policy_id += 1
-        #policy_id = 5
+        policy_id = 3
 
         if policy_id > 6:
             policy_id = 3
@@ -101,7 +101,7 @@ if __name__ == '__main__':
             save_image(state_img, time_frame_counter, action)
             model_value = agent.get_value(current_state_frame_stack, action)
 
-            log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb, args.gamma)
+            #log('Frame {}, Value {}'.format(time_frame_counter_without_reset, model_value), args.lamb, args.gamma)
 
             reward = 0
             for _ in range(SKIP_FRAMES + 1):
@@ -141,7 +141,7 @@ if __name__ == '__main__':
                         policy_type = 'AGENT_DONE'
                         agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
                         saved_already = True
-                log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb, args.gamma)
+                #log('{} - Episode: {}/{}, Total Frames: {}, Tiles Visited: {}, Total Rewards: {}, Epsilon: {:.2}, Policy: {}'.format(datetime.now(), e, ENDING_EPISODE, time_frame_counter, env.tile_visited_count, total_reward, float(agent.epsilon), policy_type), args.lamb, args.gamma)
 
                 agent.replay_batch(len(agent.memory))
                 agent.flush_memory()
@@ -154,7 +154,8 @@ if __name__ == '__main__':
             if saved_already:
                 saved_already = False
             else:
-                agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
+                saved_already = False
+                #agent.save('./{}/trial_{}_{}_{}.h5'.format(RESULT_FOLDER, args.lamb, args.gamma, e))
 
         #run once when save img
         if SAVE_IMG:

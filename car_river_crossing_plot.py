@@ -3,6 +3,8 @@ from typing import Optional, Union
 
 import numpy as np
 
+import pandas as pd
+
 import gymnasium as gym
 from gymnasium import spaces
 from car_dynamics import Car
@@ -500,12 +502,17 @@ class CarRiverCrossing(gym.Env, EzPickle):
 
         self._render_road(zoom, trans, angle)
         self.car.draw(
-            self.surf,
-            zoom,
-            trans,
-            angle,
-            mode not in ["state_pixels_list", "state_pixels"],
-        )
+             self.surf,
+             zoom,
+             trans,
+             angle,
+             mode not in ["state_pixels_list", "state_pixels"],
+         )
+
+        #DESENHAR
+
+
+        #gfxdraw.pixel(self.surf, -25, -41, dot_color)
 
         self.surf = pygame.transform.flip(self.surf, False, True)
 
@@ -736,7 +743,7 @@ if __name__ == "__main__":
                 quit = True
 
     # env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1)
-    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1.8)
+    env = CarRiverCrossing(continuous=True, render_mode="human", play_field_area=300, zoom=1.0)
 
     quit = False
     while not quit:
